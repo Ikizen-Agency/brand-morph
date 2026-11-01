@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BRANDS, type BrandColors } from "./brands";
 import { contrastRatio } from "./contrast";
-import { colorPairChecks, formatShadow, resolveColors, resolveTokens } from "./tokens";
+import { colorPairChecks, fontFamilies, formatShadow, resolveColors, resolveTokens } from "./tokens";
 import { brandDefaultTuning } from "./tuning";
 
 describe("resolveColors", () => {
@@ -75,5 +75,12 @@ describe("colorPairChecks", () => {
       expect(check.ratio).toBeCloseTo(contrastRatio(colors[check.foreground], colors[check.background]), 1);
       expect(check.passesAA).toBe(true);
     }
+  });
+});
+
+describe("fontFamilies", () => {
+  it("splits a CSS stack and strips quotes", () => {
+    expect(fontFamilies("'Plus Jakarta Sans', sans-serif")).toEqual(["Plus Jakarta Sans", "sans-serif"]);
+    expect(fontFamilies('"Source Serif 4", Georgia, serif')).toEqual(["Source Serif 4", "Georgia", "serif"]);
   });
 });

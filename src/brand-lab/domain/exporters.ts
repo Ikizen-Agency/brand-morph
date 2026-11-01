@@ -1,5 +1,6 @@
 import type { BrandId, Shadow } from "./brands";
-import { formatShadow, type TokenSet } from "./tokens";
+import { hexToRgb } from "./contrast";
+import { fontFamilies, formatShadow, type TokenSet } from "./tokens";
 
 type Entries = ReadonlyArray<readonly [name: string, value: string]>;
 
@@ -62,36 +63,46 @@ export function toTypeScript(tokens: TokenSet): string {
   return `export const ${brandId}Tokens = ${objectLiteral({ brandId, ...rest })} as const;\n`;
 }
 
-const alphaHex = (alpha: number) =>
-  Math.round(alpha * 255)
-    .toString(16)
-    .padStart(2, "0")
-    .toUpperCase();
+/** Four decimals are enough for every 8 bit channel to round trip exactly. */
+const dtcgComponent = (channel: number) => Number((channel / 255).toFixed(4));
+
+function dtcgColor(hex: string, alpha = 1) {
+  return { colorSpace: "srgb", components: hexToRgb(hex).map(dtcgComponent), alpha, hex };
+}
+
+function dtcgDimension(css: string) {
+  const match = /^(-?\d*\.?\d+)(px|rem)$/.exec(css);
+  if (!match) throw new Error(`DTCG dimensions must use px or rem, received: ${css}`);
+  return { value: Number(match[1]), unit: match[2] };
+}
+
+const px = (value: number) => ({ value, unit: "px" });
 
 function dtcgShadow(shadow: Shadow) {
   return {
-    color: `${shadow.color}${alphaHex(shadow.alpha)}`,
-    offsetX: `${shadow.x}px`,
-    offsetY: `${shadow.y}px`,
-    blur: `${shadow.blur}px`,
-    spread: `${shadow.spread}px`,
+    color: dtcgColor(shadow.color, shadow.alpha),
+    offsetX: px(shadow.x),
+    offsetY: px(shadow.y),
+    blur: px(shadow.blur),
+    spread: px(shadow.spread),
   };
 }
 
-function dtcgGroup<T>(group: object, type: string, toValue: (value: T) => unknown = (value) => value) {
+function dtcgGroup<T>(group: object, type: string, toValue: (value: T) => unknown) {
   return Object.fromEntries(
-    Object.entries(group).map(([name, value]) => [name, { $value: toValue(value as T), $type: type }]),
+    Object.entries(group).map(([name, value]) => [name, { $type: type, $value: toValue(value as T) }]),
   );
 }
 
+/** The Design Tokens Format Module 2025.10: https://www.designtokens.org/tr/2025.10/format/ */
 export function toDtcgJson(tokens: TokenSet): string {
   const tree = {
     $description: `${tokens.brandName} design tokens`,
-    color: dtcgGroup(tokens.colors, "color"),
-    font: dtcgGroup(tokens.fonts, "fontFamily"),
-    radius: dtcgGroup(tokens.radii, "dimension"),
+    color: dtcgGroup(tokens.colors, "color", dtcgColor),
+    font: dtcgGroup(tokens.fonts, "fontFamily", fontFamilies),
+    radius: dtcgGroup(tokens.radii, "dimension", dtcgDimension),
     shadow: dtcgGroup(tokens.shadows, "shadow", dtcgShadow),
-    spacing: dtcgGroup(tokens.spacing, "dimension"),
+    spacing: dtcgGroup(tokens.spacing, "dimension", dtcgDimension),
   };
   return `${JSON.stringify(tree, null, 2)}\n`;
 }
@@ -100,21 +111,55 @@ export interface ExportFormat {
   id: "css" | "tailwind-v3" | "tailwind-v4" | "typescript" | "json";
   label: string;
   fileName: (brandId: BrandId) => string;
+  mimeType: string;
   render: (tokens: TokenSet) => string;
 }
 
 export const EXPORT_FORMATS: readonly ExportFormat[] = [
-  { id: "css", label: "CSS", fileName: (id) => `tokens.${id}.css`, render: toCssVariables },
+  {
+    id: "css",
+    label: "CSS",
+    fileName: (id) => `tokens.${id}.css`,
+    mimeType: "text/css",
+    render: toCssVariables,
+  },
   {
     id: "tailwind-v3",
     label: "Tailwind v3",
     fileName: (id) => `tailwind.config.${id}.js`,
+    mimeType: "text/javascript",
     render: toTailwindV3,
   },
-  { id: "tailwind-v4", label: "Tailwind v4", fileName: (id) => `theme.${id}.css`, render: toTailwindV4 },
-  { id: "typescript", label: "TypeScript", fileName: (id) => `tokens.${id}.ts`, render: toTypeScript },
-  { id: "json", label: "JSON", fileName: (id) => `tokens.${id}.json`, render: toDtcgJson },
+  {
+    id: "tailwind-v4",
+    label: "Tailwind v4",
+    fileName: (id) => `theme.${id}.css`,
+    mimeType: "text/css",
+    render: toTailwindV4,
+  },
+  {
+    id: "typescript",
+    label: "TypeScript",
+    fileName: (id) => `tokens.${id}.ts`,
+    // TypeScript has no registered media type, so the file is served as what it is: text.
+    mimeType: "text/plain",
+    render: toTypeScript,
+  },
+  {
+    id: "json",
+    label: "DTCG JSON",
+    fileName: (id) => `${id}.tokens.json`,
+    mimeType: "application/design-tokens+json",
+    render: toDtcgJson,
+  },
 ];
+
+/** Every format in one text, each under its filename. */
+export function exportAll(tokens: TokenSet): string {
+  return EXPORT_FORMATS.map(
+    (format) => `--- ${format.fileName(tokens.brandId)} ---\n${format.render(tokens)}`,
+  ).join("\n");
+}
 
 export function exportTokens(tokens: TokenSet, formatId: ExportFormat["id"]): string {
   const format = EXPORT_FORMATS.find((candidate) => candidate.id === formatId);

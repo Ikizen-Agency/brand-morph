@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BRAND_IDS, BRANDS, COLOR_ROLES } from "./brands";
 import {
   EXPORT_FORMATS,
+  exportAll,
   exportTokens,
   toCssVariables,
   toDtcgJson,
@@ -9,6 +10,7 @@ import {
   toTailwindV4,
   toTypeScript,
 } from "./exporters";
+import { hexToRgb } from "./contrast";
 import { resolveTokens, type TokenSet } from "./tokens";
 import { brandDefaultTuning } from "./tuning";
 
@@ -75,25 +77,69 @@ describe("toTypeScript", () => {
 });
 
 describe("toDtcgJson", () => {
-  it("wraps every token in $value and $type", () => {
-    const tree = JSON.parse(toDtcgJson(tokensFor("solace")));
-    expect(tree.color.primary).toEqual({ $value: "#5E8271", $type: "color" });
-    expect(Object.keys(tree.color).sort()).toEqual([...COLOR_ROLES].sort());
-    expect(tree.font.heading.$type).toBe("fontFamily");
-    expect(tree.radius.sm).toEqual({ $value: "8px", $type: "dimension" });
-    expect(tree.spacing.gap).toEqual({ $value: "1.5rem", $type: "dimension" });
+  const tree = (id: (typeof BRAND_IDS)[number] = "solace") => JSON.parse(toDtcgJson(tokensFor(id)));
+
+  it("emits structured sRGB colors with a six digit hex fallback", () => {
+    expect(tree().color.primary).toEqual({
+      $type: "color",
+      $value: {
+        colorSpace: "srgb",
+        components: [0.3686, 0.5098, 0.4431],
+        alpha: 1,
+        hex: "#5E8271",
+      },
+    });
+    expect(Object.keys(tree().color).sort()).toEqual([...COLOR_ROLES].sort());
   });
 
-  it("emits shadows as composite values with alpha in the color", () => {
-    const { elevation1 } = JSON.parse(toDtcgJson(tokensFor("solace"))).shadow;
-    expect(elevation1.$type).toBe("shadow");
-    expect(elevation1.$value).toEqual({
-      color: "#1D33280F",
-      offsetX: "0px",
-      offsetY: "2px",
-      blur: "8px",
-      spread: "-2px",
+  it.each(BRAND_IDS)("%s color components round trip to the same 8 bit channels", (id) => {
+    const { color } = tree(id);
+    for (const role of COLOR_ROLES) {
+      const { components, hex } = color[role].$value;
+      const channels = components.map((value: number) => Math.round(value * 255));
+      expect(channels, role).toEqual(hexToRgb(hex));
+    }
+  });
+
+  it("emits dimensions as a numeric value and a unit", () => {
+    expect(tree().radius.sm).toEqual({ $type: "dimension", $value: { value: 8, unit: "px" } });
+    expect(tree().radius.full.$value).toEqual({ value: 9999, unit: "px" });
+    expect(tree().spacing.gap).toEqual({ $type: "dimension", $value: { value: 1.5, unit: "rem" } });
+  });
+
+  it("emits font families as an array of unquoted names", () => {
+    expect(tree().font.heading).toEqual({
+      $type: "fontFamily",
+      $value: ["Plus Jakarta Sans", "sans-serif"],
     });
+    expect(tree("orbit").font.body.$value).toEqual(["JetBrains Mono", "ui-monospace", "monospace"]);
+  });
+
+  it("emits shadows with structured color and dimensions", () => {
+    expect(tree().shadow.elevation1).toEqual({
+      $type: "shadow",
+      $value: {
+        color: { colorSpace: "srgb", components: [0.1137, 0.2, 0.1569], alpha: 0.06, hex: "#1D3328" },
+        offsetX: { value: 0, unit: "px" },
+        offsetY: { value: 2, unit: "px" },
+        blur: { value: 8, unit: "px" },
+        spread: { value: -2, unit: "px" },
+      },
+    });
+  });
+
+  it("uses no name the format reserves", () => {
+    const names: string[] = [];
+    const walk = (node: Record<string, unknown>) => {
+      for (const [name, child] of Object.entries(node)) {
+        if (name.startsWith("$")) continue;
+        names.push(name);
+        walk(child as Record<string, unknown>);
+      }
+    };
+    const { color, font, radius, shadow, spacing } = tree();
+    walk({ color, font, radius, shadow, spacing });
+    expect(names.filter((name) => /[{}.]/.test(name))).toEqual([]);
   });
 });
 
@@ -106,17 +152,27 @@ describe("exportTokens", () => {
         expect(output, `${format.id} ${role}`).toContain(tokens.colors[role]);
       }
       expect(output).toContain("#ABCDEF");
-      expect(output).toContain(tokens.radii.lg);
     }
   });
 
-  it("gives each format a download filename for the brand", () => {
-    expect(EXPORT_FORMATS.map((format) => format.fileName("orbit"))).toEqual([
-      "tokens.orbit.css",
-      "tailwind.config.orbit.js",
-      "theme.orbit.css",
-      "tokens.orbit.ts",
-      "tokens.orbit.json",
+  it("gives each format a download filename and media type", () => {
+    expect(
+      EXPORT_FORMATS.map((format) => [format.label, format.fileName("orbit"), format.mimeType]),
+    ).toEqual([
+      ["CSS", "tokens.orbit.css", "text/css"],
+      ["Tailwind v3", "tailwind.config.orbit.js", "text/javascript"],
+      ["Tailwind v4", "theme.orbit.css", "text/css"],
+      ["TypeScript", "tokens.orbit.ts", "text/plain"],
+      ["DTCG JSON", "orbit.tokens.json", "application/design-tokens+json"],
     ]);
+  });
+
+  it("bundles every format under its own filename", () => {
+    const tokens = tokensFor("lumen");
+    const bundle = exportAll(tokens);
+    for (const format of EXPORT_FORMATS) {
+      expect(bundle).toContain(`--- ${format.fileName("lumen")} ---`);
+      expect(bundle).toContain(format.render(tokens));
+    }
   });
 });

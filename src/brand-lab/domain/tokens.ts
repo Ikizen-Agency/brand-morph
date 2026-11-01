@@ -43,6 +43,11 @@ export function resolveTokens(brand: Brand, tuning: Tuning, overrides: ColorOver
   };
 }
 
+/** The family names of a CSS font stack, unquoted and in order. */
+export function fontFamilies(stack: string): string[] {
+  return stack.split(",").map((family) => family.trim().replace(/^['"]|['"]$/g, ""));
+}
+
 export function formatShadow(shadow: Shadow): string {
   if (shadow.alpha === 0) return "none";
   const [red, green, blue] = hexToRgb(shadow.color);
