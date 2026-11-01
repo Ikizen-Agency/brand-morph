@@ -1,32 +1,7 @@
-import { expect, test as base, type Locator, type Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
+import { expect, test } from "./guard";
 
 const STORAGE_KEY = "brand-morph/lab/v1";
-
-/** Fails any test that logs a console error, throws, or requests a third-party host. */
-const test = base.extend<{ guard: void }>({
-  guard: [
-    async ({ page, baseURL }, use) => {
-      const problems: string[] = [];
-      const origin = new URL(baseURL as string).origin;
-      page.on("console", (message) => {
-        if (message.type() === "error") problems.push(`console: ${message.text()}`);
-      });
-      page.on("pageerror", (error) => problems.push(`pageerror: ${error.message}`));
-      page.on("request", (request) => {
-        const url = new URL(request.url());
-        if (url.protocol.startsWith("http") && url.origin !== origin) {
-          problems.push(`third-party request: ${request.url()}`);
-        }
-      });
-      page.on("response", (response) => {
-        if (response.status() >= 400) problems.push(`${response.status()}: ${response.url()}`);
-      });
-      await use();
-      expect(problems).toEqual([]);
-    },
-    { auto: true },
-  ],
-});
 
 const sandbox = (page: Page) => page.getByTestId("sandbox");
 const ledger = (page: Page) => page.getByTestId("ledger");
@@ -63,7 +38,7 @@ test.describe("navigation", () => {
 
     await nav.getByRole("link", { name: "Components" }).click();
     await expect(page).toHaveURL(/\/components$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Components" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Adaptive UI Kit" })).toBeVisible();
     await expect(nav.getByRole("link", { name: "Components" })).toHaveAttribute("aria-current", "page");
     await expect(nav.getByRole("link", { name: "Playground" })).not.toHaveAttribute("aria-current");
 

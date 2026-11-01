@@ -7,6 +7,8 @@ export interface SegmentedOption<T extends string> {
   label: string;
   /** Replaces the visible label, which then stays available to assistive technology. */
   icon?: ReactNode;
+  /** Shown before the visible label. */
+  leading?: ReactNode;
 }
 
 interface SegmentedProps<T extends string> {
@@ -43,14 +45,17 @@ export function Segmented<T extends string>({
               checked={option.value === value}
               onChange={() => onChange(option.value)}
             />
-            <span className="flex min-h-9 items-center justify-center rounded-[6px] px-1 text-label-md text-ink-muted transition-colors duration-150 peer-checked:bg-elevated peer-checked:font-semibold peer-checked:text-ink peer-checked:shadow-rest peer-focus-visible:outline-2 peer-focus-visible:outline-ink hover:text-ink">
+            <span className="flex min-h-9 items-center justify-center gap-1.5 rounded-[6px] px-1 text-label-md text-ink-muted transition-colors duration-150 peer-checked:bg-elevated peer-checked:font-semibold peer-checked:text-ink peer-checked:shadow-rest peer-focus-visible:outline-2 peer-focus-visible:outline-ink hover:text-ink">
               {option.icon ? (
                 <>
                   {option.icon}
                   <span className="sr-only">{option.label}</span>
                 </>
               ) : (
-                option.label
+                <>
+                  {option.leading}
+                  {option.label}
+                </>
               )}
             </span>
           </label>

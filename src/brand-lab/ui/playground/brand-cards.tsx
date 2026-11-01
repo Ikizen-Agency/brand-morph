@@ -1,15 +1,15 @@
 "use client";
 
-import { BookOpen, Flower2, Zap, type LucideIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { BRAND_IDS, BRANDS, type BrandId } from "../../domain/brands";
 import { resolveColors } from "../../domain/tokens";
+import { BRAND_ICONS } from "../brand-icons";
 import { useLab } from "../lab-provider";
 
-const CARD_META: Record<BrandId, { icon: LucideIcon; tags: readonly string[] }> = {
-  solace: { icon: Flower2, tags: ["Curved r-24", "Spacious", "Humanist Sans", "Reassuring"] },
-  orbit: { icon: Zap, tags: ["Sharp r-0", "Compact", "Bold Mono", "Direct"] },
-  lumen: { icon: BookOpen, tags: ["Balanced r-12", "Editorial", "Serif", "Curious"] },
+const CARD_TAGS: Record<BrandId, readonly string[]> = {
+  solace: ["Curved r-24", "Spacious", "Humanist Sans", "Reassuring"],
+  orbit: ["Sharp r-0", "Compact", "Bold Mono", "Direct"],
+  lumen: ["Balanced r-12", "Editorial", "Serif", "Curious"],
 };
 
 const SWATCH_ROLES = ["primary", "surface", "onSurface", "secondary"] as const;
@@ -43,7 +43,7 @@ export function BrandCards() {
       >
         {BRAND_IDS.map((id) => {
           const brand = BRANDS[id];
-          const { icon: Icon, tags } = CARD_META[id];
+          const Icon = BRAND_ICONS[id];
           const colors = resolveColors(brand, state.overrides[id]);
           const active = id === state.brandId;
           return (
@@ -74,7 +74,7 @@ export function BrandCards() {
                 </span>
               </span>
               <span className="my-2 flex flex-wrap gap-1.5 xl:hidden">
-                {tags.map((tag) => (
+                {CARD_TAGS[id].map((tag) => (
                   <span key={tag} className="rounded bg-subtle px-2 py-0.5 text-[10px] leading-4 text-ink-muted">
                     {tag}
                   </span>
