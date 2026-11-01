@@ -75,9 +75,12 @@ label {
   cursor: pointer;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-ink);
-  outline-offset: 1px;
+/* Layered, so a focus-visible utility can recolor the ring on dark panels. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 1px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -108,6 +108,16 @@ test.describe("brand morph", () => {
     await expect(await ledgerValue(page, "--brand-primary")).toHaveText("#2B1E70;");
   });
 
+  test("every hero exposes its alt text as an accessible name", async ({ page }) => {
+    await openReady(page);
+    const art = sandbox(page).getByRole("figure").first().getByRole("img");
+    await expect(art).toHaveAccessibleName(/Sunlit wellness studio/);
+    await brandCard(page, "Orbit Supply").click();
+    await expect(art).toHaveAccessibleName(/Blueprint of an orbital hardware assembly/);
+    await brandCard(page, "Lumen Academy").click();
+    await expect(art).toHaveAccessibleName(/arcade of tall arched windows/);
+  });
+
   test("brand fonts really load", async ({ page }) => {
     await openReady(page);
     await brandCard(page, "Orbit Supply").click();
@@ -212,10 +222,32 @@ test.describe("sandbox CTAs", () => {
     await expect(sandbox(page).getByRole("button", { name: "Consultation requested" })).toBeVisible();
 
     await sandbox(page).getByRole("button", { name: "Undo" }).click();
-    await expect(sandbox(page).getByRole("status")).toHaveCount(0);
+    await expect(sandbox(page).getByRole("status")).toBeEmpty();
 
     await sandbox(page).getByRole("button", { name: "Book Consult" }).click();
-    await expect(sandbox(page).getByRole("status")).toBeVisible();
+    await expect(sandbox(page).getByRole("status")).toContainText("nothing was sent");
+  });
+
+  test("the confirmation live region is mounted before it has anything to say", async ({ page }) => {
+    await openReady(page);
+    await expect(sandbox(page).getByRole("status")).toHaveCount(1);
+    await expect(sandbox(page).getByRole("status")).toBeEmpty();
+  });
+
+  test("returning to a brand does not resurrect its old confirmation", async ({ page }) => {
+    await openReady(page);
+    await sandbox(page).getByRole("button", { name: "Book a consultation" }).click();
+    const details = sandbox(page).getByRole("button", { name: "Meet our practitioners" });
+    await details.click();
+
+    await brandCard(page, "Orbit Supply").click();
+    await expect(sandbox(page)).toHaveAttribute("data-brand", "orbit");
+    await brandCard(page, "Solace Health").click();
+    await expect(sandbox(page)).toHaveAttribute("data-brand", "solace");
+
+    await expect(sandbox(page).getByRole("status")).toBeEmpty();
+    await expect(sandbox(page).getByRole("button", { name: "Book a consultation" })).toBeVisible();
+    await expect(details).toHaveAttribute("aria-expanded", "false");
   });
 
   test("secondary CTA toggles brand details and morphing clears the demo", async ({ page }) => {
@@ -230,7 +262,7 @@ test.describe("sandbox CTAs", () => {
     await details.click();
     await sandbox(page).getByRole("button", { name: "Book a consultation" }).click();
     await brandCard(page, "Orbit Supply").click();
-    await expect(sandbox(page).getByRole("status")).toHaveCount(0);
+    await expect(sandbox(page).getByRole("status")).toBeEmpty();
     await expect(sandbox(page).getByText("SPECS MANIFEST", { exact: true })).toHaveCount(0);
   });
 });
@@ -245,7 +277,7 @@ test.describe("header actions", () => {
     await expect(sandbox(page)).toHaveAttribute("data-brand", "solace");
     await expect(radio(page, "Simulation Stage", "Mobile")).toBeChecked();
     await expect(radio(page, "Geometry / Radius", "r-24")).toBeChecked();
-    await expect(sandbox(page).getByRole("status")).toHaveCount(0);
+    await expect(sandbox(page).getByRole("status")).toBeEmpty();
     await expect(page.getByRole("banner").getByRole("status")).toHaveText("Lab reset to defaults");
     await page.reload();
     await expect(sandbox(page)).toHaveAttribute("data-brand", "solace");
@@ -344,6 +376,15 @@ test.describe("token ledger", () => {
     const copied = await page.evaluate(() => navigator.clipboard.readText());
     expect(copied).toContain("--brand-primary: #0047FF;");
     expect(copied).toContain("--btn: block;");
+  });
+
+  test("the copy button focus ring stays visible on the ink panel", async ({ page }) => {
+    await openReady(page);
+    const copy = page.getByRole("button", { name: "Copy tokens" });
+    await copy.focus();
+    await expect(copy).toBeFocused();
+    await expect.poll(() => computed(copy, "outline-color")).toBe("rgb(251, 249, 245)");
+    await expect.poll(() => computed(copy, "outline-style")).toBe("solid");
   });
 
   test("copy reports a real failure", async ({ page }) => {

@@ -226,6 +226,19 @@
   outline-offset: 2px;
 }
 
+.liveRegion {
+  width: 100%;
+}
+
+/* Stays in the accessibility tree while empty, without leaving a flex gap behind. */
+.liveRegion:empty {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
 .confirmation,
 .details {
   width: 100%;

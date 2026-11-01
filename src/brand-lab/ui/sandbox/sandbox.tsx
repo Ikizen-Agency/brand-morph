@@ -2,11 +2,12 @@
 
 import { ArrowRight, Check, Lock, Star } from "lucide-react";
 import Image from "next/image";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { BRAND_IDS, BRANDS, type BrandId } from "../../domain/brands";
 import type { TokenSet } from "../../domain/tokens";
 import { BrandScope } from "./brand-scope";
 import { LumenHeroArt, OrbitHeroArt } from "./hero-art";
+import { useScopedState } from "../use-scoped-state";
 import { PillarIcon } from "./pillar-icon";
 import styles from "./sandbox.module.css";
 
@@ -21,8 +22,8 @@ const HERO_ART: Record<BrandId, (alt: string) => ReactNode> = {
       className={styles.heroPhoto}
     />
   ),
-  orbit: () => <OrbitHeroArt />,
-  lumen: () => <LumenHeroArt />,
+  orbit: (alt) => <OrbitHeroArt alt={alt} />,
+  lumen: (alt) => <LumenHeroArt alt={alt} />,
 };
 
 /** Re-keyed per brand, so swapped copy fades in instead of snapping. */
@@ -34,12 +35,7 @@ function Morphing({ id, children }: Readonly<{ id: BrandId; children: ReactNode 
   );
 }
 
-interface DemoState {
-  /** The brand and reset this demo belongs to. A new scope starts from a clean sandbox. */
-  scope: string;
-  confirmed: boolean;
-  detailsOpen: boolean;
-}
+const CLEAN_DEMO = { confirmed: false, detailsOpen: false };
 
 interface SandboxProps {
   tokens: TokenSet;
@@ -51,10 +47,7 @@ interface SandboxProps {
 export function Sandbox({ tokens, resets, animate }: Readonly<SandboxProps>) {
   const { brandId } = tokens;
   const { name, copy } = BRANDS[brandId];
-  const scope = `${brandId}:${resets}`;
-  const [stored, setDemo] = useState<DemoState>({ scope, confirmed: false, detailsOpen: false });
-  const demo: DemoState =
-    stored.scope === scope ? stored : { scope, confirmed: false, detailsOpen: false };
+  const [demo, setDemo] = useScopedState(`${brandId}:${resets}`, () => CLEAN_DEMO);
 
   const confirm = () => setDemo({ ...demo, confirmed: true });
   const undo = () => setDemo({ ...demo, confirmed: false });
@@ -134,17 +127,19 @@ export function Sandbox({ tokens, resets, animate }: Readonly<SandboxProps>) {
                 {copy.ctaSecondary}
               </button>
             </div>
-            {demo.confirmed ? (
-              <div role="status" className={styles.confirmation}>
-                <span>
-                  <strong>{copy.ctaConfirmed}.</strong> {copy.confirmationDetail} Demo only, nothing
-                  was sent.
-                </span>
-                <button type="button" className={styles.undo} onClick={undo}>
-                  Undo
-                </button>
-              </div>
-            ) : null}
+            <div role="status" className={styles.liveRegion}>
+              {demo.confirmed ? (
+                <div className={styles.confirmation}>
+                  <span>
+                    <strong>{copy.ctaConfirmed}.</strong> {copy.confirmationDetail} Demo only,
+                    nothing was sent.
+                  </span>
+                  <button type="button" className={styles.undo} onClick={undo}>
+                    Undo
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {demo.detailsOpen ? (
               <div className={styles.details}>
                 <h3 className={styles.detailsTitle}>{copy.detailPanel.title}</h3>

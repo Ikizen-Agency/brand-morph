@@ -2,9 +2,16 @@
  * The export only ships a Solace photo. These treatments draw the other heroes from scope
  * variables, so they follow the active tokens, including color overrides.
  */
-export function OrbitHeroArt() {
+interface HeroArtProps {
+  /** Empty while the layer is not the active brand, which keeps it out of the accessibility tree. */
+  alt: string;
+}
+
+const artLabel = (alt: string) => (alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true });
+
+export function OrbitHeroArt({ alt }: Readonly<HeroArtProps>) {
   return (
-    <svg aria-hidden viewBox="0 0 512 280" preserveAspectRatio="xMidYMid slice" className="size-full">
+    <svg {...artLabel(alt)} viewBox="0 0 512 280" preserveAspectRatio="xMidYMid slice" className="size-full">
       <defs>
         <pattern id="orbit-grid" width="24" height="24" patternUnits="userSpaceOnUse">
           <path d="M24 0H0V24" fill="none" stroke="var(--sb-color-border)" strokeWidth="1" />
@@ -31,9 +38,9 @@ export function OrbitHeroArt() {
 
 const ARCH_XS = [28, 124, 220, 316, 412];
 
-export function LumenHeroArt() {
+export function LumenHeroArt({ alt }: Readonly<HeroArtProps>) {
   return (
-    <svg aria-hidden viewBox="0 0 512 280" preserveAspectRatio="xMidYMid slice" className="size-full">
+    <svg {...artLabel(alt)} viewBox="0 0 512 280" preserveAspectRatio="xMidYMid slice" className="size-full">
       <rect width="512" height="280" fill="var(--sb-color-primary)" />
       <circle cx="256" cy="196" r="92" fill="var(--sb-color-secondary)" />
       <rect y="232" width="512" height="48" fill="var(--sb-color-on-primary-container)" fillOpacity="0.45" />
