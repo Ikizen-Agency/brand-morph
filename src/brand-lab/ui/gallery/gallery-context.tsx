@@ -1,18 +1,9 @@
 "use client";
 
-import {
-  createContext,
-  use,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type Dispatch,
-} from "react";
+import { createContext, use, type Dispatch } from "react";
 import type { SpecimenAction, SpecimenState } from "../../application/gallery";
 import type { GalleryCopy } from "../../domain/gallery-copy";
-
-export type Announce = (text: string) => void;
+import type { Announce } from "../use-announcer";
 
 interface GalleryContextValue {
   specimens: SpecimenState;
@@ -46,26 +37,4 @@ export function useBooking() {
   };
 
   return { reserved, reserve };
-}
-
-const NOTICE_MS = 4000;
-
-export interface Notice {
-  id: number;
-  text: string;
-}
-
-export function useAnnouncer() {
-  const [notice, setNotice] = useState<Notice | null>(null);
-  const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
-
-  useEffect(() => () => clearTimeout(timer.current), []);
-
-  const announce = useCallback<Announce>((text) => {
-    setNotice((current) => ({ id: (current?.id ?? 0) + 1, text }));
-    clearTimeout(timer.current);
-    timer.current = setTimeout(() => setNotice(null), NOTICE_MS);
-  }, []);
-
-  return { notice, announce };
 }

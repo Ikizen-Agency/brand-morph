@@ -529,8 +529,78 @@ test.describe("feedback", () => {
   });
 });
 
+test.describe("toast scope", () => {
+  /** The toast expires by itself after 4s, so a default wait could not tell a fix from a timeout. */
+  const FASTER_THAN_TOAST_EXPIRY = 1000;
+
+  test("a brand change clears a stale message", async ({ page }) => {
+    await open(page);
+    await button(page, "Default").click();
+    await expect(toast(page)).toHaveText("Default button pressed.");
+    await chooseBrand(page, "Orbit", "orbit");
+    await expect(toast(page)).toBeEmpty({ timeout: FASTER_THAN_TOAST_EXPIRY });
+  });
+
+  test("lab reset clears a stale message", async ({ page }) => {
+    await open(page);
+    await button(page, "Default").click();
+    await expect(toast(page)).toHaveText("Default button pressed.");
+    await page.getByRole("button", { name: "Reset lab" }).click();
+    await expect(toast(page)).toBeEmpty({ timeout: FASTER_THAN_TOAST_EXPIRY });
+  });
+
+  test("work that finishes after a brand change stays silent", async ({ page }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "share", {
+        value: () =>
+          new Promise<void>((resolve) => {
+            (window as unknown as { finishShare: () => void }).finishShare = resolve;
+          }),
+      });
+    });
+    await open(page);
+    await button(page, "Share").click();
+    await chooseBrand(page, "Orbit", "orbit");
+    await page.evaluate(async () => {
+      (window as unknown as { finishShare: () => void }).finishShare();
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    });
+    await expect(toast(page)).toBeEmpty({ timeout: FASTER_THAN_TOAST_EXPIRY });
+  });
+});
+
 test.describe("modal specimen", () => {
   const dialog = (page: Page) => page.getByRole("dialog", { name: "Confirm Clinical Intake terms" });
+
+  // The second size is a landscape phone at 200% zoom, where the content really overflows.
+  for (const { clipped, ...size } of [
+    { width: 667, height: 375, clipped: false },
+    { width: 844, height: 200, clipped: true },
+  ]) {
+    test(`keeps every control reachable at ${size.width}x${size.height}`, async ({ page }) => {
+      await page.setViewportSize(size);
+      await open(page);
+      await button(page, "Review Terms").click();
+      await expect(dialog(page)).toBeVisible();
+
+      const box = await dialog(page).boundingBox();
+      expect(box?.y).toBeGreaterThanOrEqual(0);
+      expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(size.height);
+
+      const body = dialog(page).getByTestId("dialog-body");
+      const scroller = await body.evaluate((element) => ({
+        overflow: getComputedStyle(element).overflowY,
+        clipped: element.scrollHeight > element.clientHeight,
+      }));
+      expect(scroller).toEqual({ overflow: "auto", clipped });
+
+      const authorize = dialog(page).getByRole("button", { name: "Authorize & Begin" });
+      await authorize.scrollIntoViewIfNeeded();
+      await expect(authorize).toBeInViewport({ ratio: 1 });
+      await authorize.click();
+      await expect(dialog(page)).toBeHidden();
+    });
+  }
 
   test("traps focus, closes on Escape and returns focus", async ({ page }) => {
     await open(page);

@@ -18,13 +18,14 @@ import { BRAND_ICONS } from "../brand-icons";
 import { Segmented, type SegmentedOption } from "../controls/segmented";
 import { useLab } from "../lab-provider";
 import { BrandScope } from "../sandbox/brand-scope";
+import { useAnnouncer } from "../use-announcer";
 import { useScopedState } from "../use-scoped-state";
 import { ActionsSpecimen } from "./actions-specimen";
 import { BadgesSpecimen } from "./badges-specimen";
 import { CardSpecimen } from "./card-specimen";
 import { FeedbackSpecimen } from "./feedback-specimen";
 import { FormSpecimen } from "./form-specimen";
-import { GalleryProvider, useAnnouncer } from "./gallery-context";
+import { GalleryProvider } from "./gallery-context";
 import styles from "./gallery.module.css";
 import { ModalSpecimen } from "./modal-specimen";
 import { TokenDiff } from "./token-diff";
@@ -57,7 +58,7 @@ export function Gallery() {
   const [specimens, setSpecimens] = useScopedState(`${brandId}:${resets}`, () =>
     initialSpecimens(copy),
   );
-  const { notice, announce } = useAnnouncer();
+  const { notice, announce } = useAnnouncer(`${brandId}:${resets}`);
 
   const dispatch = useCallback(
     (action: SpecimenAction) => setSpecimens((current) => specimenReducer(current, action)),

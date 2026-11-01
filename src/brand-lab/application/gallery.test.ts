@@ -166,7 +166,10 @@ describe("formatBytes", () => {
     [1023, "1023 B"],
     [1024, "1.0 KB"],
     [1536, "1.5 KB"],
+    [1048524, "1023.9 KB"],
+    [1048575, "1.0 MB"],
     [5 * 1024 * 1024, "5.0 MB"],
+    [1024 ** 3 - 1, "1.0 GB"],
     [3 * 1024 ** 3, "3.0 GB"],
   ])("formats %d as %s", (bytes, expected) => {
     expect(formatBytes(bytes)).toBe(expected);

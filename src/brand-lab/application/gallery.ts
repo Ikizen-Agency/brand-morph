@@ -172,9 +172,10 @@ const BYTE_UNITS = ["KB", "MB", "GB"];
 
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
-  let value = bytes;
-  let unit = -1;
-  while (value >= 1024 && unit < BYTE_UNITS.length - 1) {
+  let value = bytes / 1024;
+  let unit = 0;
+  // Compares the rounded value, so a size just below a boundary never prints as 1024.0.
+  while (Number(value.toFixed(1)) >= 1024 && unit < BYTE_UNITS.length - 1) {
     value /= 1024;
     unit += 1;
   }

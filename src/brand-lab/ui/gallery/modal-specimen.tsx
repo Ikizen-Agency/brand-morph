@@ -74,7 +74,7 @@ export function ModalSpecimen() {
           if (event.target === event.currentTarget) event.currentTarget.close();
         }}
       >
-        <div className={styles.dialogBody}>
+        <div data-testid="dialog-body" className={styles.dialogBody}>
           <span aria-hidden className={styles.grabber} />
           <div className={styles.sheetHead}>
             <div>
