@@ -64,14 +64,14 @@ The sources conflict, so these win:
 - [x] T3 Components screen. Route: delegated direct.
   - Acceptance: specimens restyle per brand; filter chips filter sections; toggle exposes switch semantics; dismissed alert can be replayed; modal specimen opens; diff binds to active brand; no inert specimens: bookmark, share, cancel, reserve, profile, upload, authorize and more all give real local behavior (state change, native file picker, or toast feedback).
   - Checks: T1 checks plus browser verification.
-- [ ] T4 Tokens screen. Route: delegated direct.
+- [x] T4 Tokens screen. Route: delegated direct.
   - Acceptance: every swatch, radius and elevation reflects the active brand; copy reports real success or failure; all copy targets are keyboard buttons; format tabs and download use the generators; color pickers edit the active brand tokens live with a contrast indicator, and the Playground, Components and exports all reflect the edits.
   - Checks: T1 checks plus browser verification.
 - [ ] T5 Responsive, accessibility, e2e and README. Route: delegated direct.
   - Acceptance: mobile tabs, tablet and desktop layouts work with no horizontal scroll; Playwright smoke covers navigation and brand persistence; README explains the project.
   - Checks: T1 checks plus `pnpm test:e2e`.
 - [ ] T6 CD and deployment. Route: delegated direct.
-  - Acceptance: push to `main` runs checks and deploys; public URL verified in a real browser.
+  - Acceptance: repository created in the `Ikizen-Agency` GitHub organization, public, named `brand-morph`; workflow follows the org's `deploy-vercel.yml` pattern; no Turbo, because this is a single app; push to `main` runs checks and deploys; public URL verified in a real browser.
   - Checks: workflow run green, production smoke.
 
 ## Progress
@@ -81,6 +81,8 @@ T1 complete: scaffold, token domain, exporters, contrast helpers, lab reducer wi
 T2 complete: persisted `LabProvider`, studio shell, working navigation with placeholder `/components` and `/tokens`, Playground with brand cards, tuning rack, token-scoped sandbox, derived ledger, about dialog, and self-hosted images and fonts.
 
 T3 complete: `/components` gallery with brand tabs on shared lab state, working filters, six specimen sections, token diff and toast. T2 review findings fixed first.
+
+T4 complete: `/tokens` inspector with live color editing, contrast reporting, per-role and all-roles revert, real copy and download, five generated formats and a computed engine card. T3 review findings fixed first. `toDtcgJson` moved to the stable DTCG 2025.10 format.
 
 ## Verification evidence
 
@@ -158,6 +160,42 @@ T3 gaps:
 - Native `navigator.share` is exercised through a mock, because desktop Chromium has none.
 - The tablet layout is a single stacked column; T5 owns the final tablet decision.
 
+T4, observed on Node 26.4.0 and pnpm 11.21.0. Commits: `fcc3b5d` (T3 review fixes), `cca6d04` (DTCG format), `14983e3` (inspector):
+
+- `pnpm lint`: exit 0.
+- `pnpm typecheck`: exit 0.
+- `pnpm test`: 11 files, 168 tests passed.
+- `pnpm build`: exit 0, all routes prerendered as static.
+- `pnpm test:e2e`: 226 passed at 390px and 1440px.
+- DTCG: spec read at `designtokens.org/tr/2025.10/format/`. Output for all 3 brands across all 3 CTA shapes, with an override and typography composites, validated with Ajv against the official `designtokens.org/schemas/2025.10/format.json`: 9 of 9 valid. The old string format is rejected as a negative control. This was a one-off check, so the schema is not a project dependency and CI does not run it.
+- RED, T3 fixes: `formatBytes(1048575)` returned `1024.0 KB`; 3 toast specs failed with `Received: notEmpty`; the dialog spec saw `overflow: visible`.
+- The first toast specs passed against the broken code, because the toast expires at 4s inside the default 5s wait. They now use a 1s timeout, which made them fail before the fix.
+- RED, DTCG: 10 tests failed before implementation, for example `expected { '$value': '8px', ... } to deeply equal { '$type': 'dimension', ... }`.
+- RED, inspector: 18 tests failed, covering missing modules, `roleContrast is not a function` and `expected { primary: '#0047FF' } to be undefined`.
+- Copy is checked against real clipboard contents through granted permissions. Downloads are checked for filename, bytes and Blob type.
+- Screenshots at 390px, 820px and 1440px compared with `screen.png`.
+
+T4 decisions:
+
+- The export's dialog finding: the dialog is 235px tall, so it fits at 667x375. Content only clips below about 250px, for example a zoomed landscape phone, so the spec covers both 667x375 and 844x200.
+- `TokenSet` gained `typeScale`, so type tokens reach every export instead of living only in the UI. The scale is shared and only the family morphs. DTCG letter spacing is converted to px, because the format allows only px and rem, and line height is a multiplier.
+- Caption has no transform token. Its sample text is uppercase, so the label states only what the tokens carry.
+- Setting a role back to its brand value drops the override, so counts stay honest.
+- Role usage text replaces hue names such as Soft Sage, which an edit would make false.
+- Semantic roles use the same full editor rows as other roles, in place of the export's small tiles.
+- `border` shows its ratio with `No AA target`, because a decorative hairline has no WCAG minimum. Other roles use the pairing where the UI really uses them, so Solace `secondary` and `warning` honestly read `Fails AA` on defaults.
+- Copy All copies all five formats under filename headers. Copy Tokens copies the active format.
+- The hex field accepts a value without `#` but not 3-digit shorthand, which would rewrite the field while typing a 6-digit value.
+- TypeScript downloads as `text/plain`, because `text/typescript` is not an IANA registration. The DTCG file uses the spec's `application/design-tokens+json` and `.tokens.json`.
+- Announcements from work that finishes after a scope change are dropped, not only messages already showing.
+- Dropped from the export: the W3C compliance claim, the hand-typed token count, the fixed `Scale Ratio: 1.25` (now computed, 1.42), the window dots and the false engine copy.
+
+T4 gaps:
+
+- The type scale describes the inspector specimens and exports. The Playground sandbox and gallery keep their own CSS sizes and do not consume it.
+- Radii and elevation are not editable; only colors are, as scoped.
+- The tablet layout is a single stacked column; T5 owns the final tablet decision.
+
 ## Next step
 
-T4. Build the Tokens screen, replacing the `/tokens` placeholder and the `RoutePlaceholder` component.
+T5. Finish responsive, accessibility, e2e and README work.
