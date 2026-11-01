@@ -61,7 +61,7 @@ The sources conflict, so these win:
 - [x] T2 Studio shell and Playground. Route: delegated direct (2+ non-trivial files).
   - Acceptance: shared layout and working navigation; brand cards, density, radius, CTA shape, device preview, auto-match, reset, about dialog and ledger copy all work; ledger always matches state; sandbox is style-isolated.
   - Checks: T1 checks plus browser verification.
-- [ ] T3 Components screen. Route: delegated direct.
+- [x] T3 Components screen. Route: delegated direct.
   - Acceptance: specimens restyle per brand; filter chips filter sections; toggle exposes switch semantics; dismissed alert can be replayed; modal specimen opens; diff binds to active brand; no inert specimens: bookmark, share, cancel, reserve, profile, upload, authorize and more all give real local behavior (state change, native file picker, or toast feedback).
   - Checks: T1 checks plus browser verification.
 - [ ] T4 Tokens screen. Route: delegated direct.
@@ -79,6 +79,8 @@ The sources conflict, so these win:
 T1 complete: scaffold, token domain, exporters, contrast helpers, lab reducer with per-brand color overrides, and safe persisted state parsing.
 
 T2 complete: persisted `LabProvider`, studio shell, working navigation with placeholder `/components` and `/tokens`, Playground with brand cards, tuning rack, token-scoped sandbox, derived ledger, about dialog, and self-hosted images and fonts.
+
+T3 complete: `/components` gallery with brand tabs on shared lab state, working filters, six specimen sections, token diff and toast. T2 review findings fixed first.
 
 ## Verification evidence
 
@@ -116,6 +118,8 @@ T2 decisions:
 - The export version label `v1.4` is dropped because it matches no real release.
 - Section labels use `muted` rather than `primary`, because Orbit primary on its surface is unreadable.
 
+T2 commit: `b2b3aef`.
+
 T2 gaps:
 
 - The export emblem URL returned HTTP 403, so the emblem is an inline SVG drawn for this project.
@@ -123,6 +127,37 @@ T2 gaps:
 - The tablet inspector drawer from `DESIGN.md` is not built. Tablet uses a stacked layout; T5 owns the final tablet decision.
 - No UI sets color overrides until T4. The e2e covers overrides through seeded persisted state.
 
+T3, observed on Node 26.4.0 and pnpm 11.21.0. Commits: `259ef23` (T2 review fixes), `95f009e` (gallery):
+
+- `pnpm lint`: exit 0.
+- `pnpm typecheck`: exit 0.
+- `pnpm test`: 9 files, 123 tests passed.
+- `pnpm build`: exit 0, all routes prerendered as static.
+- `pnpm test:e2e`: 140 passed, 70 specs each at 390px and 1440px.
+- RED, T2 fixes: 4 e2e specs failed before the fix. Examples: the focus ring computed `rgb(31, 36, 33)` instead of `rgb(251, 249, 245)`, and a returned brand still showed its old confirmation. All passed after it; the outline color is asserted by computed style in the browser.
+- RED, T3: 3 unit test files failed on missing modules before implementation.
+- A generated-text contrast e2e measures every visible specimen string at AA in all three brands, including error states.
+- Screenshot review against `screen.png` at 390px, 820px and 1440px found a real defect: the dialog primary button inherited a flex basis as height. Fixed and asserted.
+
+T3 decisions:
+
+- Brand tabs are native radios through `Segmented`, so arrow keys come from the platform.
+- Specimen state resets on brand change and on lab Reset through `useScopedState`, so nothing from another brand survives and morph transitions stay intact. The filter resets only on lab Reset.
+- Book, Instant Reserve and Cancel share one reservation. Cancel with nothing booked explains that instead of doing nothing.
+- The onboarding bar is derived from name, specialty, consent and upload. Defaults give the exported 75%, and a file reaches 100%.
+- Authorize needs the consent checkbox, and withdrawing consent revokes authorization.
+- The embedded sheet stays as designed. Review Terms opens the real native dialog, a bottom sheet on phones and centered from 768px.
+- The token diff is studio chrome, so it never wears a brand. Other brands show archetype tuning plus their saved overrides.
+- Export `v2.4` is dropped from the Live Diff pill because it matches no real release.
+- Filled buttons use canonical `primary`, not the dark export color.
+
+T3 gaps:
+
+- Only the Solace practitioner has a photo; Orbit and Lumen use monograms.
+- The disabled matrix button is intentionally inert.
+- Native `navigator.share` is exercised through a mock, because desktop Chromium has none.
+- The tablet layout is a single stacked column; T5 owns the final tablet decision.
+
 ## Next step
 
-T3. Build the Components screen on `BrandScope`, replacing the `/components` placeholder. `solace-doctor-portrait.jpg` is already in `public/brands/`.
+T4. Build the Tokens screen, replacing the `/tokens` placeholder and the `RoutePlaceholder` component.
