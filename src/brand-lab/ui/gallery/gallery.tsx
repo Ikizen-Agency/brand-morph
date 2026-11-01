@@ -12,10 +12,9 @@ import {
   type GallerySectionId,
   type SpecimenAction,
 } from "../../application/gallery";
-import { BRAND_IDS, BRANDS, type BrandId } from "../../domain/brands";
 import { GALLERY_COPY } from "../../domain/gallery-copy";
 import { BRAND_ICONS } from "../brand-icons";
-import { Segmented, type SegmentedOption } from "../controls/segmented";
+import { BrandTabs } from "../controls/brand-tabs";
 import { useLab } from "../lab-provider";
 import { BrandScope } from "../sandbox/brand-scope";
 import { useAnnouncer } from "../use-announcer";
@@ -30,15 +29,6 @@ import styles from "./gallery.module.css";
 import { ModalSpecimen } from "./modal-specimen";
 import { TokenDiff } from "./token-diff";
 
-const BRAND_TABS: ReadonlyArray<SegmentedOption<BrandId>> = BRAND_IDS.map((id) => {
-  const Icon = BRAND_ICONS[id];
-  return {
-    value: id,
-    label: BRANDS[id].name.split(" ")[0],
-    leading: <Icon aria-hidden size={14} />,
-  };
-});
-
 const SPECIMENS: Record<GallerySectionId, () => ReactNode> = {
   actions: ActionsSpecimen,
   form: FormSpecimen,
@@ -49,7 +39,7 @@ const SPECIMENS: Record<GallerySectionId, () => ReactNode> = {
 };
 
 export function Gallery() {
-  const { state, tokens, ready, resets, dispatch: labDispatch } = useLab();
+  const { state, tokens, ready, resets } = useLab();
   const { brandId } = state;
   const copy = GALLERY_COPY[brandId];
   const BrandIcon = BRAND_ICONS[brandId];
@@ -88,14 +78,7 @@ export function Gallery() {
               Real-time morphological response across brand token spaces.
             </p>
           </div>
-          <Segmented
-            legend="Active brand"
-            hideLegend
-            name="gallery-brand"
-            value={brandId}
-            options={BRAND_TABS}
-            onChange={(next) => labDispatch({ type: "selectBrand", brandId: next })}
-          />
+          <BrandTabs name="gallery-brand" />
           <div
             role="group"
             aria-label="Filter specimens by category"

@@ -73,6 +73,33 @@ describe("labReducer", () => {
     ).toBe(orbit);
   });
 
+  it("setColorOverride drops an override that matches the brand value", () => {
+    const edited = labReducer(orbit, { type: "setColorOverride", role: "primary", hex: "#112233" });
+    const restored = labReducer(edited, {
+      type: "setColorOverride",
+      role: "primary",
+      hex: BRANDS.orbit.colors.primary.toLowerCase(),
+    });
+    expect(restored.overrides.orbit).toBeUndefined();
+  });
+
+  it("clearColorOverride reverts one role and keeps the others", () => {
+    const one = labReducer(orbit, { type: "setColorOverride", role: "primary", hex: "#112233" });
+    const two = labReducer(one, { type: "setColorOverride", role: "surface", hex: "#445566" });
+    const reverted = labReducer(two, { type: "clearColorOverride", role: "primary" });
+    expect(reverted.overrides.orbit).toEqual({ surface: "#445566" });
+  });
+
+  it("clearColorOverride removes the brand entry with its last override", () => {
+    const one = labReducer(orbit, { type: "setColorOverride", role: "primary", hex: "#112233" });
+    const reverted = labReducer(one, { type: "clearColorOverride", role: "primary" });
+    expect(reverted.overrides).toEqual({});
+  });
+
+  it("clearColorOverride without an override keeps the same state", () => {
+    expect(labReducer(orbit, { type: "clearColorOverride", role: "primary" })).toBe(orbit);
+  });
+
   it("clearColorOverrides clears the active brand and leaves other brands alone", () => {
     const state: LabState = {
       ...orbit,

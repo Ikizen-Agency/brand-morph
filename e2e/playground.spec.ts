@@ -44,9 +44,9 @@ test.describe("navigation", () => {
 
     await nav.getByRole("link", { name: "Tokens" }).click();
     await expect(page).toHaveURL(/\/tokens$/);
-    await expect(page.getByRole("heading", { level: 1, name: "Tokens" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: "Token Architecture" })).toBeVisible();
 
-    await page.getByRole("link", { name: "Back to Playground" }).click();
+    await nav.getByRole("link", { name: "Playground" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(sandbox(page)).toBeVisible();
   });
@@ -290,7 +290,7 @@ test.describe("persistence", () => {
     await option(page, "Simulation Stage", "Tablet").click();
 
     await primaryNav(page).getByRole("link", { name: "Tokens" }).click();
-    await expect(page.getByText("Active brand: Lumen Academy")).toBeVisible();
+    await expect(page.getByTestId("active-brand")).toHaveText("Lumen Academy");
     await primaryNav(page).getByRole("link", { name: "Playground" }).click();
     await expect(sandbox(page)).toHaveAttribute("data-brand", "lumen");
     await expect(radio(page, "Rhythm Density", "Compact")).toBeChecked();

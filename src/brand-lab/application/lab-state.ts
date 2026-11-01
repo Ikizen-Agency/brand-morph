@@ -30,6 +30,7 @@ export type LabAction =
   | { type: "setCta"; cta: CtaShape }
   | { type: "setDevice"; device: Device }
   | { type: "setColorOverride"; role: ColorRole; hex: string }
+  | { type: "clearColorOverride"; role: ColorRole }
   | { type: "clearColorOverrides" }
   | { type: "autoMatch" }
   | { type: "reset" };
@@ -43,6 +44,16 @@ export const initialLabState: LabState = {
 
 function withoutBrand(overrides: BrandOverrides, brandId: BrandId): BrandOverrides {
   return Object.fromEntries(Object.entries(overrides).filter(([id]) => id !== brandId));
+}
+
+/** Removes one role. A brand with no overrides left keeps no entry, so counts stay honest. */
+function withoutRole(state: LabState, role: ColorRole): LabState {
+  const current = state.overrides[state.brandId];
+  if (current?.[role] === undefined) return state;
+  const rest = Object.fromEntries(Object.entries(current).filter(([name]) => name !== role));
+  const overrides = withoutBrand(state.overrides, state.brandId);
+  if (Object.keys(rest).length > 0) overrides[state.brandId] = rest;
+  return { ...state, overrides };
 }
 
 const includes = <T extends string>(options: readonly T[], value: unknown): value is T =>
@@ -64,15 +75,16 @@ export function labReducer(state: LabState, action: LabAction): LabState {
       return { ...state, device: action.device };
     case "setColorOverride": {
       if (!includes(COLOR_ROLES, action.role) || !isHexColor(action.hex)) return state;
+      const hex = action.hex.toUpperCase();
+      if (hex === BRANDS[state.brandId].colors[action.role]) return withoutRole(state, action.role);
       const current = state.overrides[state.brandId];
       return {
         ...state,
-        overrides: {
-          ...state.overrides,
-          [state.brandId]: { ...current, [action.role]: action.hex.toUpperCase() },
-        },
+        overrides: { ...state.overrides, [state.brandId]: { ...current, [action.role]: hex } },
       };
     }
+    case "clearColorOverride":
+      return withoutRole(state, action.role);
     case "clearColorOverrides":
       return { ...state, overrides: withoutBrand(state.overrides, state.brandId) };
     case "autoMatch":

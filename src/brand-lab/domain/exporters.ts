@@ -1,6 +1,6 @@
 import type { BrandId, Shadow } from "./brands";
 import { hexToRgb } from "./contrast";
-import { fontFamilies, formatShadow, type TokenSet } from "./tokens";
+import { fontFamilies, formatShadow, type TokenSet, type TypeStyle } from "./tokens";
 
 type Entries = ReadonlyArray<readonly [name: string, value: string]>;
 
@@ -11,6 +11,14 @@ const kebabEntries = (group: object): Array<[string, string]> =>
 
 const shadowEntries = (tokens: TokenSet): Array<[string, string]> =>
   Object.entries(tokens.shadows).map(([name, shadow]) => [kebab(name), formatShadow(shadow)]);
+
+const typeEntries = (tokens: TokenSet): Array<[string, string]> =>
+  Object.entries(tokens.typeScale).flatMap(([name, style]) => [
+    [`text-${name}`, `${style.fontSize}px`],
+    [`text-${name}--line-height`, `${style.lineHeight}px`],
+    [`text-${name}--letter-spacing`, `${style.letterSpacing}em`],
+    [`text-${name}--font-weight`, `${style.fontWeight}`],
+  ]);
 
 function block(selector: string, sections: readonly Entries[]): string {
   const body = sections
@@ -29,6 +37,7 @@ export function toCssVariables(tokens: TokenSet): string {
     prefixed("radius-", kebabEntries(tokens.radii)),
     shadowEntries(tokens),
     prefixed("space-", kebabEntries(tokens.spacing)),
+    typeEntries(tokens),
   ]);
 }
 
@@ -39,6 +48,7 @@ export function toTailwindV4(tokens: TokenSet): string {
     prefixed("radius-", kebabEntries(tokens.radii)),
     prefixed("shadow-", shadowEntries(tokens)),
     prefixed("spacing-", kebabEntries(tokens.spacing)),
+    typeEntries(tokens),
   ]);
 }
 
@@ -49,6 +59,19 @@ export function toTailwindV3(tokens: TokenSet): string {
     borderRadius: Object.fromEntries(kebabEntries(tokens.radii)),
     boxShadow: Object.fromEntries(shadowEntries(tokens)),
     spacing: Object.fromEntries(kebabEntries(tokens.spacing)),
+    fontSize: Object.fromEntries(
+      Object.entries(tokens.typeScale).map(([name, style]) => [
+        name,
+        [
+          `${style.fontSize}px`,
+          {
+            lineHeight: `${style.lineHeight}px`,
+            letterSpacing: `${style.letterSpacing}em`,
+            fontWeight: `${style.fontWeight}`,
+          },
+        ],
+      ]),
+    ),
   };
   return `module.exports = ${objectLiteral({ theme: { extend } })};\n`;
 }
@@ -88,6 +111,15 @@ function dtcgShadow(shadow: Shadow) {
   };
 }
 
+/** The format allows only px and rem letter spacing, and a line height is a multiplier. */
+const dtcgTypography = (fonts: TokenSet["fonts"]) => (style: TypeStyle) => ({
+  fontFamily: fontFamilies(fonts[style.family]),
+  fontSize: px(style.fontSize),
+  fontWeight: style.fontWeight,
+  letterSpacing: px(Number((style.letterSpacing * style.fontSize).toFixed(3))),
+  lineHeight: Number((style.lineHeight / style.fontSize).toFixed(4)),
+});
+
 function dtcgGroup<T>(group: object, type: string, toValue: (value: T) => unknown) {
   return Object.fromEntries(
     Object.entries(group).map(([name, value]) => [name, { $type: type, $value: toValue(value as T) }]),
@@ -103,6 +135,7 @@ export function toDtcgJson(tokens: TokenSet): string {
     radius: dtcgGroup(tokens.radii, "dimension", dtcgDimension),
     shadow: dtcgGroup(tokens.shadows, "shadow", dtcgShadow),
     spacing: dtcgGroup(tokens.spacing, "dimension", dtcgDimension),
+    typography: dtcgGroup(tokens.typeScale, "typography", dtcgTypography(tokens.fonts)),
   };
   return `${JSON.stringify(tree, null, 2)}\n`;
 }

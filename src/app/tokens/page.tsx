@@ -1,13 +1,8 @@
 import type { Metadata } from "next";
-import { RoutePlaceholder } from "@/brand-lab/ui/shell/route-placeholder";
+import { TokenInspector } from "@/brand-lab/ui/tokens/token-inspector";
 
 export const metadata: Metadata = { title: "Tokens | Brand Morph" };
 
 export default function TokensPage() {
-  return (
-    <RoutePlaceholder
-      title="Tokens"
-      summary="The token inspector is coming next. It will show, edit and export the active brand tokens."
-    />
-  );
+  return <TokenInspector />;
 }

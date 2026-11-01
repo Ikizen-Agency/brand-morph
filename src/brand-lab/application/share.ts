@@ -1,18 +1,14 @@
+import { writeClipboard, type ClipboardTarget } from "./clipboard";
+
 export type ShareOutcome = "shared" | "copied" | "dismissed" | "failed";
 
 /** The parts of `navigator` used here, optional because browsers ship them unevenly. */
-export interface ShareTarget {
+export interface ShareTarget extends ClipboardTarget {
   share?: (data: ShareData) => Promise<void>;
-  clipboard?: { writeText: (text: string) => Promise<void> };
 }
 
 export async function copyText(target: ShareTarget, text: string): Promise<boolean> {
-  try {
-    await target.clipboard?.writeText(text);
-    return Boolean(target.clipboard);
-  } catch {
-    return false;
-  }
+  return (await writeClipboard(target, text)) === "copied";
 }
 
 /** Reports what really happened: a closed share sheet is not a failure and not a success. */

@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { BRANDS, type BrandColors } from "./brands";
+import { BRAND_IDS, BRANDS, COLOR_ROLES, type BrandColors } from "./brands";
 import { contrastRatio } from "./contrast";
-import { colorPairChecks, fontFamilies, formatShadow, resolveColors, resolveTokens } from "./tokens";
+import {
+  colorPairChecks,
+  fontFamilies,
+  formatShadow,
+  formatTypeSpec,
+  resolveColors,
+  resolveTokens,
+  roleContrast,
+} from "./tokens";
 import { brandDefaultTuning } from "./tuning";
 
 describe("resolveColors", () => {
@@ -82,5 +90,62 @@ describe("fontFamilies", () => {
   it("splits a CSS stack and strips quotes", () => {
     expect(fontFamilies("'Plus Jakarta Sans', sans-serif")).toEqual(["Plus Jakarta Sans", "sans-serif"]);
     expect(fontFamilies('"Source Serif 4", Georgia, serif')).toEqual(["Source Serif 4", "Georgia", "serif"]);
+  });
+});
+
+describe("type scale", () => {
+  it.each(BRAND_IDS)("%s resolves the shared scale into its tokens", (id) => {
+    const { typeScale } = resolveTokens(BRANDS[id], brandDefaultTuning(id));
+    expect(Object.keys(typeScale)).toEqual(["display", "heading", "body", "caption"]);
+    expect(typeScale.display).toEqual({
+      family: "heading",
+      fontSize: 34,
+      lineHeight: 40,
+      letterSpacing: -0.025,
+      fontWeight: 700,
+    });
+    expect(typeScale.body.fontSize).toBe(14);
+  });
+
+  it("describes a style with its real values", () => {
+    const { typeScale } = resolveTokens(BRANDS.solace, brandDefaultTuning("solace"));
+    expect(formatTypeSpec(typeScale.display)).toBe("34px / 40px / -0.025em / 700");
+    expect(formatTypeSpec(typeScale.body)).toBe("14px / 22px / -0.006em / 400");
+  });
+});
+
+describe("roleContrast", () => {
+  const { colors } = BRANDS.solace;
+
+  it("gives every role a pairing", () => {
+    for (const role of COLOR_ROLES) {
+      expect(roleContrast(colors, role).ratio, role).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("reads the same check from either side of a pair", () => {
+    expect(roleContrast(colors, "primary")).toEqual(roleContrast(colors, "onPrimary"));
+    expect(roleContrast(colors, "primary")).toMatchObject({
+      foreground: "onPrimary",
+      background: "primary",
+      ratio: 4.51,
+      passesAA: true,
+      hasTarget: true,
+    });
+  });
+
+  it("reports a semantic color used as text honestly", () => {
+    expect(roleContrast(colors, "warning")).toMatchObject({
+      background: "surfaceContainer",
+      passesAA: false,
+    });
+  });
+
+  it("holds a decorative border to no text target", () => {
+    expect(roleContrast(colors, "border").hasTarget).toBe(false);
+  });
+
+  it("follows an edited color", () => {
+    expect(roleContrast({ ...colors, primary: "#0A0F0D" }, "primary").passesAA).toBe(false);
   });
 });

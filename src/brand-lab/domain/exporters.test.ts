@@ -38,6 +38,10 @@ describe("toCssVariables", () => {
     expect(css).toContain("--elevation-1: 0px 2px 8px -2px rgba(29, 51, 40, 0.06);");
     expect(css).toContain("--space-gap: 1.5rem;");
     expect(css).toContain("--font-heading: 'Plus Jakarta Sans', sans-serif;");
+    expect(css).toContain("--text-display: 34px;");
+    expect(css).toContain("--text-display--line-height: 40px;");
+    expect(css).toContain("--text-display--letter-spacing: -0.025em;");
+    expect(css).toContain("--text-display--font-weight: 700;");
   });
 });
 
@@ -51,6 +55,10 @@ describe("toTailwindV3", () => {
     expect(extend.boxShadow["elevation-cta"]).toBe("3px 3px 0px 0px rgba(204, 255, 0, 1)");
     expect(extend.fontFamily.heading).toEqual([tokens.fonts.heading]);
     expect(extend.spacing.gap).toBe("0.5rem");
+    expect(extend.fontSize.body).toEqual([
+      "14px",
+      { lineHeight: "22px", letterSpacing: "-0.006em", fontWeight: "400" },
+    ]);
   });
 });
 
@@ -63,6 +71,8 @@ describe("toTailwindV4", () => {
     expect(theme).toContain("--radius-cta: 6px;");
     expect(theme).toContain("--spacing-gap: 1.5rem;");
     expect(theme).not.toContain("--elevation-1:");
+    expect(theme).toContain("--text-caption: 12px;");
+    expect(theme).toContain("--text-caption--line-height: 16px;");
   });
 });
 
@@ -128,6 +138,19 @@ describe("toDtcgJson", () => {
     });
   });
 
+  it("emits the type scale as typography composites in the units the format allows", () => {
+    expect(tree("lumen").typography.display).toEqual({
+      $type: "typography",
+      $value: {
+        fontFamily: ["Source Serif 4", "Georgia", "serif"],
+        fontSize: { value: 34, unit: "px" },
+        fontWeight: 700,
+        letterSpacing: { value: -0.85, unit: "px" },
+        lineHeight: 1.1765,
+      },
+    });
+  });
+
   it("uses no name the format reserves", () => {
     const names: string[] = [];
     const walk = (node: Record<string, unknown>) => {
@@ -137,8 +160,8 @@ describe("toDtcgJson", () => {
         walk(child as Record<string, unknown>);
       }
     };
-    const { color, font, radius, shadow, spacing } = tree();
-    walk({ color, font, radius, shadow, spacing });
+    const { color, font, radius, shadow, spacing, typography } = tree();
+    walk({ color, font, radius, shadow, spacing, typography });
     expect(names.filter((name) => /[{}.]/.test(name))).toEqual([]);
   });
 });
