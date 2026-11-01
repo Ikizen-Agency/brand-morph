@@ -43,6 +43,12 @@ export interface BrandStat {
   label: string;
 }
 
+/** What a sandbox secondary CTA reveals. */
+export interface BrandDetailPanel {
+  title: string;
+  items: readonly [string, string, string];
+}
+
 export interface BrandCopy {
   subtext: string;
   url: string;
@@ -53,6 +59,12 @@ export interface BrandCopy {
   navCta: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  /** Replaces the primary CTA label once the visitor confirms it in the sandbox. */
+  ctaConfirmed: string;
+  confirmationDetail: string;
+  detailPanel: BrandDetailPanel;
+  heroTag: string;
+  heroAlt: string;
   sectionLabel: string;
   pillars: readonly [BrandPillar, BrandPillar, BrandPillar];
   testimonial: string;
@@ -114,6 +126,18 @@ export const BRANDS: Record<BrandId, Brand> = {
       navCta: "Book Consult",
       ctaPrimary: "Book a consultation",
       ctaSecondary: "Meet our practitioners",
+      ctaConfirmed: "Consultation requested",
+      confirmationDetail: "A care coordinator would reach out within 15 minutes.",
+      detailPanel: {
+        title: "Your care team",
+        items: [
+          "Dr. Julian Vance, Clinical Director",
+          "Dr. Mei Tanaka, Integrative Medicine",
+          "Nora Ellis, Clinical Nutritionist",
+        ],
+      },
+      heroTag: "Dr. Julian Vance • Clinical Director",
+      heroAlt: "Sunlit wellness studio with linen textures, terracotta vessels and a fig tree",
       sectionLabel: "The Solace Difference",
       pillars: [
         {
@@ -185,6 +209,18 @@ export const BRANDS: Record<BrandId, Brand> = {
       navCta: "Quick Order",
       ctaPrimary: "Shop drop 04",
       ctaSecondary: "View specs manifest",
+      ctaConfirmed: "Drop 04 reserved",
+      confirmationDetail: "Your kit would be held for 15 minutes at the nearest hub.",
+      detailPanel: {
+        title: "SPECS MANIFEST",
+        items: [
+          "FRAME: GRADE 5 TITANIUM",
+          "SHELL: 1000D CORDURA",
+          "DISPATCH: UNDER 90 MINUTES",
+        ],
+      },
+      heroTag: "DROP 04 • MODULAR EDC KIT",
+      heroAlt: "Blueprint of an orbital hardware assembly on a technical grid",
       sectionLabel: "VELOCITY PROTOCOLS",
       pillars: [
         {
@@ -256,6 +292,18 @@ export const BRANDS: Record<BrandId, Brand> = {
       navCta: "Admissions",
       ctaPrimary: "Apply for Fellowship",
       ctaSecondary: "Explore Curriculum",
+      ctaConfirmed: "Application started",
+      confirmationDetail: "Your fellowship draft would be saved for the admissions team.",
+      detailPanel: {
+        title: "Autumn curriculum",
+        items: [
+          "Socratic Seminar in Systems Thinking",
+          "Architectural Design Studio",
+          "Mentored Capstone Critique",
+        ],
+      },
+      heroTag: "Prof. Iris Okafor • Dean of Studios",
+      heroAlt: "Illustrated arcade of tall arched windows lit by a low amber sun",
       sectionLabel: "The Lumen Pedagogy",
       pillars: [
         {

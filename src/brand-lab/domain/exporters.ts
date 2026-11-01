@@ -3,7 +3,7 @@ import { formatShadow, type TokenSet } from "./tokens";
 
 type Entries = ReadonlyArray<readonly [name: string, value: string]>;
 
-const kebab = (name: string) => name.replace(/([a-z])([A-Z0-9])/g, "$1-$2").toLowerCase();
+export const kebab = (name: string) => name.replace(/([a-z])([A-Z0-9])/g, "$1-$2").toLowerCase();
 
 const kebabEntries = (group: object): Array<[string, string]> =>
   Object.entries(group).map(([name, value]) => [kebab(name), value as string]);

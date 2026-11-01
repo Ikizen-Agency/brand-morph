@@ -5,9 +5,11 @@ import {
   brandDefaultTuning,
   CTA_SHAPES,
   DENSITIES,
+  DEVICES,
   RADIUS_SCALES,
   type CtaShape,
   type Density,
+  type Device,
   type RadiusScale,
   type Tuning,
 } from "../domain/tuning";
@@ -18,6 +20,7 @@ export interface LabState {
   brandId: BrandId;
   tuning: Tuning;
   overrides: BrandOverrides;
+  device: Device;
 }
 
 export type LabAction =
@@ -25,6 +28,7 @@ export type LabAction =
   | { type: "setDensity"; density: Density }
   | { type: "setRadius"; radius: RadiusScale }
   | { type: "setCta"; cta: CtaShape }
+  | { type: "setDevice"; device: Device }
   | { type: "setColorOverride"; role: ColorRole; hex: string }
   | { type: "clearColorOverrides" }
   | { type: "autoMatch" }
@@ -34,6 +38,7 @@ export const initialLabState: LabState = {
   brandId: "solace",
   tuning: brandDefaultTuning("solace"),
   overrides: {},
+  device: "mobile",
 };
 
 function withoutBrand(overrides: BrandOverrides, brandId: BrandId): BrandOverrides {
@@ -47,6 +52,7 @@ const includes = <T extends string>(options: readonly T[], value: unknown): valu
 export function labReducer(state: LabState, action: LabAction): LabState {
   switch (action.type) {
     case "selectBrand":
+      if (action.brandId === state.brandId) return state;
       return { ...state, brandId: action.brandId, tuning: brandDefaultTuning(action.brandId) };
     case "setDensity":
       return { ...state, tuning: { ...state.tuning, density: action.density } };
@@ -54,6 +60,8 @@ export function labReducer(state: LabState, action: LabAction): LabState {
       return { ...state, tuning: { ...state.tuning, radius: action.radius } };
     case "setCta":
       return { ...state, tuning: { ...state.tuning, cta: action.cta } };
+    case "setDevice":
+      return { ...state, device: action.device };
     case "setColorOverride": {
       if (!includes(COLOR_ROLES, action.role) || !isHexColor(action.hex)) return state;
       const current = state.overrides[state.brandId];
@@ -76,6 +84,26 @@ export function labReducer(state: LabState, action: LabAction): LabState {
     case "reset":
       return initialLabState;
   }
+}
+
+/** The lab state plus whether the persisted state has been read on this client. */
+export interface LabSession {
+  lab: LabState;
+  ready: boolean;
+  /** Counts resets, so state outside the reducer (sandbox demos) can restart with the lab. */
+  resets: number;
+}
+
+export type LabSessionAction = LabAction | { type: "hydrate"; restored: LabState | null };
+
+export const initialLabSession: LabSession = { lab: initialLabState, ready: false, resets: 0 };
+
+export function labSessionReducer(session: LabSession, action: LabSessionAction): LabSession {
+  if (action.type === "hydrate") {
+    return { ...session, lab: action.restored ?? session.lab, ready: true };
+  }
+  const resets = action.type === "reset" ? session.resets + 1 : session.resets;
+  return { ...session, lab: labReducer(session.lab, action), resets };
 }
 
 /** Effective tokens for the active brand: brand values, tuning and overrides resolved together. */
@@ -137,6 +165,7 @@ export function parseLabState(raw: string | null): LabState | null {
   if (!isRecord(value) || !includes(BRAND_IDS, value.brandId)) return null;
   const tuning = parseTuning(value.tuning);
   const overrides = parseBrandOverrides(value.overrides);
-  if (!tuning || !overrides) return null;
-  return { brandId: value.brandId, tuning, overrides };
+  const device = value.device ?? initialLabState.device;
+  if (!tuning || !overrides || !includes(DEVICES, device)) return null;
+  return { brandId: value.brandId, tuning, overrides, device };
 }

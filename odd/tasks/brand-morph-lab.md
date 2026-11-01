@@ -58,7 +58,7 @@ The sources conflict, so these win:
 - [x] T1 Scaffold and token domain. Route: delegated direct (2+ non-trivial files).
   - Acceptance: app builds; typed brand tokens, exporters and tuning reducer are pure and tested; every brand passes AA contrast for primary on-primary and text on surface; per-brand color overrides resolve into effective tokens for exports and contrast checks.
   - Checks: `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
-- [ ] T2 Studio shell and Playground. Route: delegated direct.
+- [x] T2 Studio shell and Playground. Route: delegated direct (2+ non-trivial files).
   - Acceptance: shared layout and working navigation; brand cards, density, radius, CTA shape, device preview, auto-match, reset, about dialog and ledger copy all work; ledger always matches state; sandbox is style-isolated.
   - Checks: T1 checks plus browser verification.
 - [ ] T3 Components screen. Route: delegated direct.
@@ -78,6 +78,8 @@ The sources conflict, so these win:
 
 T1 complete: scaffold, token domain, exporters, contrast helpers, lab reducer with per-brand color overrides, and safe persisted state parsing.
 
+T2 complete: persisted `LabProvider`, studio shell, working navigation with placeholder `/components` and `/tokens`, Playground with brand cards, tuning rack, token-scoped sandbox, derived ledger, about dialog, and self-hosted images and fonts.
+
 ## Verification evidence
 
 T1, observed on Node 26.4.0 and pnpm 11.21.0:
@@ -95,6 +97,32 @@ Token decisions:
 - Not in the sources, so chosen here: Orbit `border` and semantics, Lumen `border` and semantics, and the `JetBrains Mono` and `Source Serif 4` stacks.
 - `warning` values are not AA as text on Solace surfaces; use them as fills or pair them with `onSurface`.
 
+T2, observed on Node 26.4.0 and pnpm 11.21.0:
+
+- `pnpm lint`: exit 0.
+- `pnpm typecheck`: exit 0.
+- `pnpm test`: 6 files, 79 tests passed.
+- `pnpm build`: exit 0, all routes prerendered as static.
+- `pnpm test:e2e`: 46 passed, 23 specs each in Chromium at 390px and 1440px, failing on any console error, page error, HTTP error or third-party request.
+- RED: `selectBrand on the active brand is a no-op that keeps tuning edits` failed with `expected { brandId: 'orbit', ...} to be { brandId: 'orbit', ...} // Object.is equality`. The ledger and scope variable tests failed on missing modules before implementation.
+- Browser testing found a real defect: on phones the reset notice was hidden from assistive technology. Fixed with a single always-present status region.
+- Screenshots at 390px, 820px and 1440px compared with `screen.png`.
+
+T2 decisions:
+
+- Device presets are real widths of 390, 768 and 1280, scaled to fit, instead of a fill preset. At 1440px the center pane is narrower than 768, so a fill preset would have been smaller than Tablet.
+- The simulated device is part of `LabState` and persists. Selecting a brand and Auto-match keep it; Reset restores Mobile.
+- Solace card tag reads `Humanist Sans`, following the canonical decision that Solace is sans.
+- The export version label `v1.4` is dropped because it matches no real release.
+- Section labels use `muted` rather than `primary`, because Orbit primary on its surface is unreadable.
+
+T2 gaps:
+
+- The export emblem URL returned HTTP 403, so the emblem is an inline SVG drawn for this project.
+- The export has no Orbit or Lumen photos. Their heroes are inline SVG driven by scope variables, and their members use monogram avatars.
+- The tablet inspector drawer from `DESIGN.md` is not built. Tablet uses a stacked layout; T5 owns the final tablet decision.
+- No UI sets color overrides until T4. The e2e covers overrides through seeded persisted state.
+
 ## Next step
 
-T2. Load `JetBrains Mono` and `Source Serif 4` through `next/font` so the brand type really morphs.
+T3. Build the Components screen on `BrandScope`, replacing the `/components` placeholder. `solace-doctor-portrait.jpg` is already in `public/brands/`.

@@ -9,6 +9,12 @@ export type RadiusScale = (typeof RADIUS_SCALES)[number];
 export const CTA_SHAPES = ["pill", "sharp", "block"] as const;
 export type CtaShape = (typeof CTA_SHAPES)[number];
 
+/** Simulated viewports, in real CSS pixels, so the sandbox reflows through container queries. */
+export const DEVICES = ["desktop", "tablet", "mobile"] as const;
+export type Device = (typeof DEVICES)[number];
+
+export const DEVICE_WIDTH: Record<Device, number> = { desktop: 1280, tablet: 768, mobile: 390 };
+
 export interface Tuning {
   density: Density;
   radius: RadiusScale;

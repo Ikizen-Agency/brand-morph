@@ -3,8 +3,10 @@ import { BRANDS } from "../domain/brands";
 import { brandDefaultTuning } from "../domain/tuning";
 import {
   effectiveTokens,
+  initialLabSession,
   initialLabState,
   labReducer,
+  labSessionReducer,
   parseLabState,
   serializeLabState,
   type LabState,
@@ -18,12 +20,23 @@ describe("labReducer", () => {
       brandId: "solace",
       tuning: brandDefaultTuning("solace"),
       overrides: {},
+      device: "mobile",
     });
   });
 
   it("selectBrand adopts the archetype tuning of the new brand", () => {
     expect(orbit.brandId).toBe("orbit");
     expect(orbit.tuning).toEqual({ density: "compact", radius: "0px", cta: "block" });
+  });
+
+  it("selectBrand on the active brand is a no-op that keeps tuning edits", () => {
+    const tuned = labReducer(orbit, { type: "setDensity", density: "comfortable" });
+    expect(labReducer(tuned, { type: "selectBrand", brandId: "orbit" })).toBe(tuned);
+  });
+
+  it("selectBrand keeps the simulated device", () => {
+    const tablet = labReducer(orbit, { type: "setDevice", device: "tablet" });
+    expect(labReducer(tablet, { type: "selectBrand", brandId: "lumen" }).device).toBe("tablet");
   });
 
   it("selectBrand keeps overrides per brand", () => {
@@ -75,11 +88,13 @@ describe("labReducer", () => {
       brandId: "lumen",
       tuning: { density: "compact", radius: "0px", cta: "pill" },
       overrides: { lumen: { primary: "#111111" } },
+      device: "desktop",
     };
     expect(labReducer(state, { type: "autoMatch" })).toEqual({
       brandId: "lumen",
       tuning: brandDefaultTuning("lumen"),
       overrides: {},
+      device: "desktop",
     });
   });
 
@@ -89,6 +104,37 @@ describe("labReducer", () => {
       overrides: { orbit: { primary: "#111111" }, lumen: { primary: "#222222" } },
     };
     expect(labReducer(state, { type: "reset" })).toEqual(initialLabState);
+  });
+});
+
+describe("labSessionReducer", () => {
+  it("starts on the prerendered default state and not ready", () => {
+    expect(initialLabSession).toEqual({ lab: initialLabState, ready: false, resets: 0 });
+  });
+
+  it("hydrate adopts a restored state and becomes ready", () => {
+    expect(labSessionReducer(initialLabSession, { type: "hydrate", restored: orbit })).toEqual({
+      lab: orbit,
+      ready: true,
+      resets: 0,
+    });
+  });
+
+  it("hydrate without a restored state keeps the current state and becomes ready", () => {
+    expect(labSessionReducer(initialLabSession, { type: "hydrate", restored: null })).toEqual({
+      lab: initialLabState,
+      ready: true,
+      resets: 0,
+    });
+  });
+
+  it("delegates every other action to labReducer", () => {
+    const next = labSessionReducer(initialLabSession, { type: "selectBrand", brandId: "orbit" });
+    expect(next).toEqual({ lab: orbit, ready: false, resets: 0 });
+  });
+
+  it("counts resets", () => {
+    expect(labSessionReducer(initialLabSession, { type: "reset" }).resets).toBe(1);
   });
 });
 
@@ -107,6 +153,7 @@ describe("parseLabState", () => {
     brandId: "lumen",
     tuning: { density: "compact", radius: "12px", cta: "sharp" },
     overrides: { lumen: { primary: "#112233" } },
+    device: "tablet",
   };
   const parse = (value: unknown) => parseLabState(JSON.stringify(value));
 
@@ -119,6 +166,10 @@ describe("parseLabState", () => {
     expect(parse({ ...valid, overrides: { lumen: { primary: "#aabbcc" } } })?.overrides).toEqual({
       lumen: { primary: "#AABBCC" },
     });
+  });
+
+  it("defaults a missing device so older persisted states stay valid", () => {
+    expect(parse({ ...valid, device: undefined })?.device).toBe("mobile");
   });
 
   it("rejects null, invalid JSON and non objects", () => {
@@ -135,6 +186,7 @@ describe("parseLabState", () => {
     ["unknown density", { ...valid, tuning: { ...valid.tuning, density: "airy" } }],
     ["unknown radius", { ...valid, tuning: { ...valid.tuning, radius: "7px" } }],
     ["unknown cta", { ...valid, tuning: { ...valid.tuning, cta: "round" } }],
+    ["unknown device", { ...valid, device: "watch" }],
     ["missing tuning", { brandId: "lumen", overrides: {} }],
     ["missing overrides", { brandId: "lumen", tuning: valid.tuning }],
     ["array overrides", { ...valid, overrides: [] }],
