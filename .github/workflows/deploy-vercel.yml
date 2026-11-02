@@ -1,0 +1,74 @@
+name: CI/CD Deploy
+
+on:
+  push:
+    branches: [main, staging]
+
+# One deployment per branch at a time; a newer push waits instead of overlapping.
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Pinned Vercel CLI: it receives VERCEL_TOKEN, so never run whatever `latest` happens to be.
+      VERCEL_CLI: vercel@48.2.0
+      # Explicit link: the CLI skips scope discovery, which fails when the token lists no teams.
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      # Corepack so Vercel installs the pnpm version pinned in package.json `packageManager`
+      # (pnpm 11, which reads `allowBuilds`). The app has no runtime environment variables.
+      VERCEL_DEPLOY_FLAGS: >-
+        --yes
+        --build-env ENABLE_EXPERIMENTAL_COREPACK=1
+    steps:
+      # Fails before any work when deployment is not configured. Both branches deploy, so both
+      # need it. Prints names, never values.
+      - name: Check deployment configuration
+        run: |
+          missing=0
+          for name in VERCEL_ORG_ID VERCEL_PROJECT_ID VERCEL_TOKEN; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required configuration: $name"
+              missing=1
+            fi
+          done
+          exit "$missing"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - uses: actions/checkout@v4
+
+      # Reads the pnpm version from package.json `packageManager`. Pinned to the v4 commit (third-party action).
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      # pnpm 11 fails here, without prompting, on any dependency build script that
+      # `allowBuilds` in pnpm-workspace.yaml does not list.
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      # Vercel builds again remotely; this build only gates the deployment on build errors.
+      - run: pnpm build
+
+      - name: Deploy to Vercel (Production)
+        if: github.ref == 'refs/heads/main'
+        run: npx --yes "$VERCEL_CLI" --prod $VERCEL_DEPLOY_FLAGS --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel (Staging)
+        if: github.ref == 'refs/heads/staging'
+        run: npx --yes "$VERCEL_CLI" $VERCEL_DEPLOY_FLAGS --token="$VERCEL_TOKEN"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
