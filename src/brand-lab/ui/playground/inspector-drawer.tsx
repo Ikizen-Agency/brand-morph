@@ -6,7 +6,7 @@ import { describeLab } from "../../application/ledger";
 import { useLab } from "../lab-provider";
 import styles from "./inspector-drawer.module.css";
 
-const TABLET_QUERY = "(min-width: 640px) and (max-width: 1023.98px)";
+const TABLET_QUERY = "(40rem <= width < 64rem)";
 
 /**
  * The lab configuration: a non-modal bottom drawer on tablets, so the sandbox stays live and

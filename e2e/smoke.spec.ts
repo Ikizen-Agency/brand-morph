@@ -1,13 +1,14 @@
 import { test as unguarded, type Page } from "@playwright/test";
+import { BRAND_IDS } from "../src/brand-lab/domain/brands";
+import { expectHydratedBrand, ROUTES } from "./brand-scope";
 import { expect, test } from "./guard";
 
-const ROUTES = ["/", "/components", "/tokens"] as const;
 const WIDTHS = [320, 390, 640, 820, 1024, 1440, 1920];
 
 const handle = (page: Page) => page.getByRole("button", { name: /Lab Configuration/ });
 const panel = (page: Page) => page.locator("#inspector-panel");
 const nav = (page: Page) => page.locator('nav[aria-label="Primary"]:visible');
-const brandTab = (page: Page, name: string) =>
+const brandTab = (page: Page, name: string | RegExp) =>
   page.getByRole("group", { name: "Active brand" }).locator("label").filter({ hasText: name });
 const option = (page: Page, group: string, name: string) =>
   page.getByRole("group", { name: group }).locator("label").filter({ hasText: name });
@@ -183,15 +184,17 @@ test.describe("responsive layout", () => {
     test.skip(viewport?.width !== 1440, "one project is enough: each test sets its own viewport");
   });
 
-  for (const brand of ["Solace", "Orbit", "Lumen"]) {
+  for (const brand of BRAND_IDS) {
     test(`${brand} never scrolls sideways at any width`, async ({ page }) => {
       await page.goto("/tokens");
-      await brandTab(page, brand).click();
+      await expectHydratedBrand(page, "/tokens", "solace");
+      await brandTab(page, new RegExp(brand, "i")).click();
+      await expectHydratedBrand(page, "/tokens", brand);
       for (const width of WIDTHS) {
         await page.setViewportSize({ width, height: 800 });
         for (const route of ROUTES) {
           await page.goto(route);
-          await page.getByRole("heading", { level: 1 }).waitFor();
+          await expectHydratedBrand(page, route, brand);
           await expect
             .poll(
               () =>
@@ -205,6 +208,39 @@ test.describe("responsive layout", () => {
       }
     });
   }
+
+  test("the export output stays usable on a landscape phone", async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    await page.goto("/tokens");
+    const output = page.getByTestId("export-output");
+    await output.scrollIntoViewIfNeeded();
+    await expect(output).toBeInViewport();
+    expect((await output.boundingBox())?.height).toBeGreaterThanOrEqual(200);
+  });
+
+  test("breakpoints follow the browser font size, like the Tailwind layout", async ({ page }) => {
+    const session = await page.context().newCDPSession(page);
+    await session.send("Page.setFontSizes", { fontSizes: { standard: 20, fixed: 16 } });
+
+    // 40rem is 800px and 64rem is 1280px here, so 700px is a phone and 1100px is a tablet.
+    await page.setViewportSize({ width: 700, height: 900 });
+    await openPlayground(page);
+    await expect(page.locator("body")).toHaveCSS("font-size", "20px");
+    await expect(handle(page)).toBeHidden();
+    await expect(page.locator('nav[aria-label="Primary"]:visible')).toHaveCount(1);
+
+    await page.goto("/components");
+    const actions = await page.getByTestId("section-actions").boundingBox();
+    const form = await page.getByTestId("section-form").boundingBox();
+    expect(form?.x).toBe(actions?.x);
+
+    await page.setViewportSize({ width: 1100, height: 900 });
+    await openPlayground(page);
+    await handle(page).click();
+    await expect(panel(page)).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(panel(page)).toBeHidden();
+  });
 
   test("the workbench is a tri-pane from 1024px up", async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 800 });

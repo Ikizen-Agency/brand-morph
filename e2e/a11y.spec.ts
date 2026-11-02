@@ -2,10 +2,10 @@ import AxeBuilder from "@axe-core/playwright";
 import type { Page } from "@playwright/test";
 import { initialLabState, serializeLabState } from "../src/brand-lab/application/lab-state";
 import { BRAND_IDS, type BrandId } from "../src/brand-lab/domain/brands";
+import { expectHydratedBrand, ROUTES } from "./brand-scope";
 import { expect, test } from "./guard";
 
 const STORAGE_KEY = "brand-morph/lab/v1";
-const ROUTES = ["/", "/components", "/tokens"] as const;
 
 async function seedBrand(page: Page, brandId: BrandId) {
   const value = serializeLabState({ ...initialLabState, brandId });
@@ -31,7 +31,7 @@ test.describe("axe", () => {
         await seedBrand(page, brandId);
         await page.goto(route);
         await page.getByRole("heading", { level: 1 }).waitFor();
-        await expect(page.locator("[data-ready='false'], [data-animate='false']")).toHaveCount(0);
+        await expectHydratedBrand(page, route, brandId);
         expect(await seriousViolations(page)).toEqual([]);
       });
     }
@@ -39,7 +39,7 @@ test.describe("axe", () => {
     test(`an open dialog and the drawer have no serious violations in ${brandId}`, async ({ page }) => {
       await seedBrand(page, brandId);
       await page.goto("/");
-      await expect(page.getByTestId("sandbox")).toHaveAttribute("data-animate", "true");
+      await expectHydratedBrand(page, "/", brandId);
       const handle = page.getByRole("button", { name: /Lab Configuration/ });
       if (await handle.isVisible()) await handle.click();
       expect(await seriousViolations(page)).toEqual([]);
@@ -83,7 +83,7 @@ test.describe("page structure", () => {
 
   test("solace secondary and warning never color text", async ({ page }) => {
     const seen = await Promise.all(
-      (["/", "/components", "/tokens"] as const).map(async (route) => {
+      ROUTES.map(async (route) => {
         const tab = await page.context().newPage();
         await tab.goto(route);
         await tab.getByRole("heading", { level: 1 }).waitFor();

@@ -1,10 +1,13 @@
-/* A real drawer on tablets only. Phones and desktops render the same content in the page flow. */
+/*
+ * A real drawer on tablets only. Phones and desktops render the same content in the page flow.
+ * Rem, like the Tailwind sm and lg breakpoints, so all of them move together with browser font size.
+ */
 
 .handle {
   display: none;
 }
 
-@media (min-width: 640px) and (max-width: 1023.98px) {
+@media (40rem <= width < 64rem) {
   .drawer {
     position: fixed;
     right: 0;
