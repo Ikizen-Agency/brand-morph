@@ -86,6 +86,8 @@ T4 complete: `/tokens` inspector with live color editing, contrast reporting, pe
 
 T5 complete: tablet bottom drawer, two-column Components and Tokens, tri-pane from 1024px, a 1680px content cap, axe coverage per route and brand, smoke specs, status pages, metadata, Open Graph image, icon, robots, sitemap, README and `.nvmrc`. T4 review findings fixed first.
 
+T6 in progress: T5 review findings fixed and the deployment workflow added. Repository creation, deployment and production smoke are pending.
+
 ## Verification evidence
 
 T1, observed on Node 26.4.0 and pnpm 11.21.0:
@@ -235,6 +237,32 @@ T5 gaps:
 - Whether `VERCEL_PROJECT_PRODUCTION_URL` reaches the build depends on how T6 runs it. If it does not, Open Graph URLs fall back to `localhost` and the sitemap is empty, so T6 must verify `og:image` in production.
 - The README live URL is a placeholder for T6.
 
+T6 local part, observed on Node 26.4.0 and pnpm 11.21.0. Commits: `100be94` (T5 review fixes), `b53d60d` (workflow):
+
+- `pnpm lint`: exit 0.
+- `pnpm typecheck`: exit 0.
+- `pnpm test`: 13 files, 176 tests passed.
+- `pnpm build`: exit 0.
+- `pnpm test:e2e`: exit 0, 310 passed and 30 skipped, in 3.1 minutes.
+- Workflow YAML parsed with `js-yaml`: 11 steps, no database, blob, auth, migration or demo references. It has not run yet.
+- RED, export output at 844x390: `Expected: >= 200, Received: 0`.
+- RED, breakpoints with a 20px browser font: the drawer handle stayed visible at 700px, where the Tailwind layout is a phone. The two systems really diverged, because Tailwind breakpoints are rem and the drawer and gallery queries were px. The spec sets the font through CDP `Page.setFontSizes`.
+- Negative control, brand assertions: a wrong storage key in `a11y.spec.ts` fails `/tokens` in Orbit with `Expected: "orbit", Received: "solace"`. The old spec would have scanned Solace. The key was restored before commit.
+- pnpm install: pnpm 11 hard-fails on an unlisted build script (`ERR_PNPM_IGNORED_BUILDS`, exit 1) and accepts an explicit `false`, proven offline with a local fixture. No installed package declares an install script, so `allowBuilds` needs no change. `esbuild` in it is only an optional peer of Vite and is not in the tree.
+- No installed package requires Node above 22.
+
+T6 decisions:
+
+- The configuration check runs on both branches, because in this app both deploy and need the same three values. Flow gates it to `main` because of production-only secrets.
+- The gallery media queries moved to rem along with the drawer, because they diverged the same way.
+- The export output minimum is 16rem.
+
+T6 gaps:
+
+- A clean-room `pnpm install --frozen-lockfile` did not finish: the npm registry was too slow here, stopping at 375 of 382 packages with no build error. CI is the first complete run.
+- Node 22 is still not run locally. `engines` is `>=22`, so Vercel may choose a newer major than CI.
+- `og:image` in production and the README live URL stay open for the deployment step.
+
 ## Next step
 
-T6. Create the repository, add the deployment workflow, and verify the public URL, including `og:image`.
+Create repository and deploy, then verify the public URL, including `og:image`.
