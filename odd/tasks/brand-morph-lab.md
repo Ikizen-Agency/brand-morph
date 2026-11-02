@@ -67,7 +67,7 @@ The sources conflict, so these win:
 - [x] T4 Tokens screen. Route: delegated direct.
   - Acceptance: every swatch, radius and elevation reflects the active brand; copy reports real success or failure; all copy targets are keyboard buttons; format tabs and download use the generators; color pickers edit the active brand tokens live with a contrast indicator, and the Playground, Components and exports all reflect the edits.
   - Checks: T1 checks plus browser verification.
-- [ ] T5 Responsive, accessibility, e2e and README. Route: delegated direct.
+- [x] T5 Responsive, accessibility, e2e and README. Route: delegated direct.
   - Acceptance: mobile tabs, tablet and desktop layouts work with no horizontal scroll; Playwright smoke covers navigation and brand persistence; README explains the project.
   - Checks: T1 checks plus `pnpm test:e2e`.
 - [ ] T6 CD and deployment. Route: delegated direct.
@@ -83,6 +83,8 @@ T2 complete: persisted `LabProvider`, studio shell, working navigation with plac
 T3 complete: `/components` gallery with brand tabs on shared lab state, working filters, six specimen sections, token diff and toast. T2 review findings fixed first.
 
 T4 complete: `/tokens` inspector with live color editing, contrast reporting, per-role and all-roles revert, real copy and download, five generated formats and a computed engine card. T3 review findings fixed first. `toDtcgJson` moved to the stable DTCG 2025.10 format.
+
+T5 complete: tablet bottom drawer, two-column Components and Tokens, tri-pane from 1024px, a 1680px content cap, axe coverage per route and brand, smoke specs, status pages, metadata, Open Graph image, icon, robots, sitemap, README and `.nvmrc`. T4 review findings fixed first.
 
 ## Verification evidence
 
@@ -196,6 +198,43 @@ T4 gaps:
 - Radii and elevation are not editable; only colors are, as scoped.
 - The tablet layout is a single stacked column; T5 owns the final tablet decision.
 
+T5, observed on Node 26.4.0 and pnpm 11.21.0. Commits: `c6f3e01` (T4 review fixes), `ffccefc` (metadata and status pages), `8015a70` (drawer, responsive, accessibility), `dbb7ff6` (README and `.nvmrc`):
+
+- `pnpm lint`: exit 0.
+- `pnpm typecheck`: exit 0.
+- `pnpm test`: 13 files, 176 tests passed.
+- `pnpm build`: exit 0, all routes prerendered as static. It logs an informational `metadataBase` warning when `VERCEL_PROJECT_PRODUCTION_URL` is unset.
+- `pnpm test:e2e`: exit 0, 308 passed and 26 skipped, in 3.3 minutes. The skips are viewport-gated: drawer specs run only at 820px and multi-width layout specs only at 1440px.
+- RED, T4 fixes: 3 unit tests failed before the fix, for example `expected "vi.fn()" to not be called at all, but actually been called 1 times` for the blob revocation.
+- RED, site URL: `Cannot find module './site-url'`.
+- RED, accessibility: axe failed `/tokens` for all 3 brands at 390px, 820px and 1440px with `label-content-name-mismatch` on 11 copy tiles. Fixed by making the visible text part of the accessible name.
+- The drawer specs and the `describeLab` test were written alongside the implementation, so they have no observed RED.
+- The widened T4 assertions found that Lumen's CTA elevation computes to `none`, and that an `onPrimary` edit can drop more than one role below AA. The specs assert both.
+- `error.tsx` has no e2e, because a production build has no way to trigger it. It was checked once through a temporary throwing route, removed before commit: the page rendered inside the shell and Try again re-rendered the route.
+- A one-off build with `VERCEL_PROJECT_PRODUCTION_URL` set produced absolute `og:image`, `robots.txt` and `sitemap.xml` URLs. Without it the build passes and the sitemap is empty.
+- No sideways scroll at 320, 390, 640, 820, 1024, 1440 and 1920 on all 3 routes in all 3 brands.
+- Screenshots reviewed at 390px, 820px and 1440px on all routes, plus 1024px, the open drawer, the 404 page and the Open Graph image.
+- Solace `secondary` and `warning` never color text: a spec reads the computed color of every text node on each route. `secondary` appears only in aria-hidden star icons and hero art, and `warning` only as a dot and a tinted badge background.
+
+T5 decisions:
+
+- Breakpoints are 640px and 1024px as briefed, not the 768px and 1280px in `DESIGN.md`. Header navigation moves up at 640px so the drawer never stacks on the bottom tabs. At 1024px the right pane is 300px, and 340px from 1280px.
+- One copy of the controls, not separate mobile and tablet trees. CSS turns it into a drawer, and a collapsed panel uses `visibility: hidden`, so nothing inside can take focus and no JavaScript layout detection is needed.
+- The drawer is non-modal, because tuning only makes sense while the sandbox stays visible. Opening moves focus to the panel. Escape closes it and returns focus only if focus was inside. Escape closes an open dialog first.
+- The page gains bottom padding while the drawer is open, so nothing stays trapped behind it.
+- Brand card tags are hidden from 640px up, because they cost drawer height.
+- The tablet Playwright project runs only `smoke` and `a11y`, because the other specs drive controls that sit in the drawer at that width.
+- `dtcgDimension` writes `0` as 0px and leaves out values DTCG cannot express, because exports run during render.
+- The download announcement now reads `Download requested`, because the page cannot know what the browser did with it. The object URL is revoked after 30s.
+- Copy tiles for radii, elevations and spacing lost their `aria-label`, so their names now include the value, for example `Copy 8px --radius-sm`.
+
+T5 gaps:
+
+- Node 22 is not installed under `mise` (only 26.4.0 and 26.5.0), so the Node 22 build and tests were not run. T6 CI will be the first real Node 22 run.
+- The `DESIGN.md` path in the brief no longer existed, so it was re-extracted from the original zip.
+- Whether `VERCEL_PROJECT_PRODUCTION_URL` reaches the build depends on how T6 runs it. If it does not, Open Graph URLs fall back to `localhost` and the sitemap is empty, so T6 must verify `og:image` in production.
+- The README live URL is a placeholder for T6.
+
 ## Next step
 
-T5. Finish responsive, accessibility, e2e and README work.
+T6. Create the repository, add the deployment workflow, and verify the public URL, including `og:image`.
