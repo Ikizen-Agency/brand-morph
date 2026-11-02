@@ -14,7 +14,7 @@ export function TokenDiff() {
     <aside
       aria-labelledby="diff-heading"
       data-testid="token-diff"
-      className="mx-4 flex flex-col gap-2 rounded-enclosure border border-line bg-subtle/60 p-3.5 md:mx-7 xl:sticky xl:top-[calc(4rem+1.75rem)] xl:mx-0 xl:mt-7 xl:mr-7"
+      className="mx-4 flex flex-col gap-2 rounded-enclosure border border-line bg-subtle/60 p-3.5 sm:mx-7 lg:sticky lg:top-[calc(4rem+1.75rem)] lg:mx-0 lg:mt-7 lg:mr-7"
     >
       <div className="flex items-center justify-between gap-2">
         <h2 id="diff-heading" className="flex items-center gap-2 font-display text-headline-sm">
@@ -24,7 +24,7 @@ export function TokenDiff() {
         <span className="rounded bg-muted px-2 py-0.5 text-label-mono text-ink-muted">INSPECTOR</span>
       </div>
       <p className="text-body-sm text-ink-muted">Bold values differ from the active brand.</p>
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col gap-2 sm:grid sm:grid-cols-3 lg:flex">
         {brandDiffRows(state).map(({ brandId, name, active, tokens }) => {
           const Icon = BRAND_ICONS[brandId];
           return (

@@ -12,7 +12,7 @@ export function StudioShell({ children }: Readonly<{ children: ReactNode }>) {
         Skip to content
       </a>
       <StudioHeader />
-      <main id="main" className="flex-1 pb-24 md:pb-0">
+      <main id="main" tabIndex={-1} className="flex-1 pb-24 outline-none sm:pb-0">
         {children}
       </main>
       <BottomTabs />

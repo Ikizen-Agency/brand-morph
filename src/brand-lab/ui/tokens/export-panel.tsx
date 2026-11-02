@@ -65,7 +65,7 @@ export function ExportPanel({
           data-testid="export-output"
           tabIndex={0}
           aria-label={`Generated ${format.label} tokens`}
-          className="mt-2 max-h-96 overflow-auto font-mono text-[11px] leading-[18px] focus-visible:outline-canvas xl:max-h-[calc(100dvh-30rem)]"
+          className="mt-2 max-h-96 overflow-auto font-mono text-[11px] leading-[18px] focus-visible:outline-canvas sm:max-h-[calc(100dvh-30rem)]"
         >
           {output}
         </pre>

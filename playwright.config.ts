@@ -17,6 +17,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
     },
     {
+      // Tablet behavior is the drawer and two-column layouts, so it runs the cross-route specs only.
+      name: "tablet-820",
+      testMatch: /(smoke|a11y)\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 820, height: 1180 } },
+    },
+    {
       name: "desktop-1440",
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },

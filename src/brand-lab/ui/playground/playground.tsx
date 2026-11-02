@@ -1,22 +1,29 @@
 "use client";
 
 import { Lightbulb } from "lucide-react";
+import { useState } from "react";
 import { useLab } from "../lab-provider";
 import { Sandbox } from "../sandbox/sandbox";
 import { BrandCards } from "./brand-cards";
 import { DeviceStage } from "./device-stage";
+import { InspectorDrawer } from "./inspector-drawer";
 import { TokenLedger } from "./token-ledger";
 import { TuningRack } from "./tuning-rack";
 
 const sidePane =
-  "xl:sticky xl:top-[calc(4rem+1px)] xl:h-[calc(100dvh-4rem-1px)] xl:self-start xl:overflow-y-auto";
+  "lg:sticky lg:top-[calc(4rem+1px)] lg:h-[calc(100dvh-4rem-1px)] lg:self-start lg:overflow-y-auto";
 
 export function Playground() {
   const { state, tokens, ready, resets } = useLab();
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <div className="mx-auto w-full max-w-5xl xl:grid xl:max-w-none xl:grid-cols-[280px_minmax(0,1fr)_340px] xl:grid-rows-[auto_1fr]">
-      <section className="px-4 pt-4 pb-6 md:px-7 xl:col-start-2 xl:row-start-1 xl:px-7 xl:pt-7 xl:pb-5">
+    <div
+      className={`mx-auto w-full max-w-5xl lg:grid lg:max-w-[1680px] lg:grid-cols-[280px_minmax(0,1fr)_300px] lg:grid-rows-[auto_1fr] lg:pb-0 xl:grid-cols-[280px_minmax(0,1fr)_340px] ${
+        drawerOpen ? "sm:pb-[calc(60dvh+4rem)]" : "sm:pb-16"
+      }`}
+    >
+      <section className="px-4 pt-4 pb-6 sm:px-7 lg:col-start-2 lg:row-start-1 lg:pt-7 lg:pb-5">
         <div className="mb-2 flex flex-wrap items-center gap-1">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-subtle px-2.5 py-1 text-label-mono uppercase">
             <span aria-hidden className="size-1.5 rounded-full bg-ink motion-safe:animate-pulse" />
@@ -37,17 +44,18 @@ export function Playground() {
         </p>
       </section>
 
-      <aside
-        aria-label="Lab configuration"
-        className={`flex flex-col gap-6 pb-6 md:px-7 xl:col-start-1 xl:row-span-2 xl:row-start-1 xl:gap-5 xl:border-r xl:border-line xl:p-5 ${sidePane}`}
+      <InspectorDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        className={`lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:border-r lg:border-line ${sidePane}`}
       >
         <BrandCards />
-        <div className="px-4 md:px-0">
+        <div className="px-4 sm:px-0">
           <TuningRack />
         </div>
-      </aside>
+      </InspectorDrawer>
 
-      <div className="min-w-0 px-4 pb-8 md:px-7 xl:col-start-2 xl:row-start-2 xl:pb-10">
+      <div className="min-w-0 px-4 pb-8 sm:px-7 lg:col-start-2 lg:row-start-2 lg:pb-10">
         <DeviceStage device={state.device} visible={ready}>
           <Sandbox tokens={tokens} resets={resets} animate={ready} />
         </DeviceStage>
@@ -55,7 +63,7 @@ export function Playground() {
 
       <aside
         aria-label="Token output"
-        className={`flex flex-col gap-6 px-4 pb-6 md:grid md:grid-cols-2 md:px-7 xl:col-start-3 xl:row-span-2 xl:row-start-1 xl:flex xl:gap-5 xl:border-l xl:border-line xl:p-5 ${sidePane}`}
+        className={`flex flex-col gap-6 px-4 pb-6 sm:grid sm:grid-cols-2 sm:px-7 lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:flex lg:gap-5 lg:border-l lg:border-line lg:p-5 ${sidePane}`}
       >
         <TokenLedger />
         <section className="flex items-start gap-2 self-start rounded-enclosure border border-line bg-elevated p-3.5 shadow-rest">

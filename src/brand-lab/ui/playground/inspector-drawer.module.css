@@ -1,0 +1,59 @@
+/* A real drawer on tablets only. Phones and desktops render the same content in the page flow. */
+
+.handle {
+  display: none;
+}
+
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .drawer {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    border-top: 1px solid var(--color-line-strong);
+    background-color: var(--color-canvas);
+    box-shadow: var(--shadow-float);
+  }
+
+  .handle {
+    display: flex;
+    width: 100%;
+    min-height: 56px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-inline: 28px;
+    text-align: left;
+  }
+
+  .chevron {
+    flex: none;
+    transition: rotate 300ms;
+  }
+
+  .drawer[data-open="true"] .chevron {
+    rotate: 180deg;
+  }
+
+  /* Hidden, not just offscreen, so nothing in a collapsed drawer can take focus. */
+  .panel {
+    max-height: 60dvh;
+    padding: 4px 28px 20px;
+    overflow-y: auto;
+    transition:
+      max-height 300ms,
+      padding-block 300ms,
+      visibility 0s linear 0s;
+  }
+
+  .drawer[data-open="false"] .panel {
+    max-height: 0;
+    padding-block: 0;
+    visibility: hidden;
+    transition:
+      max-height 300ms,
+      padding-block 300ms,
+      visibility 0s linear 300ms;
+  }
+}

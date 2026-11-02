@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { initialLabState, labReducer } from "./lab-state";
-import { ledgerEntries, ledgerText } from "./ledger";
+import { describeLab, ledgerEntries, ledgerText } from "./ledger";
 
 const value = (state: typeof initialLabState, name: string) =>
   ledgerEntries(state).find((entry) => entry.name === name)?.value;
+
+describe("describeLab", () => {
+  it("summarizes the brand and tuning in one line", () => {
+    expect(describeLab(initialLabState)).toBe("Solace Health, comfortable, radius 24px, pill CTA");
+  });
+});
 
 describe("ledgerEntries", () => {
   it("describes the active brand and its tuning", () => {

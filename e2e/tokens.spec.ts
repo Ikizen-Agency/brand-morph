@@ -314,27 +314,27 @@ test.describe("copy", () => {
     await open(page);
     const tokens = tokensFor("solace");
     const targets: ReadonlyArray<readonly [string, string]> = [
-      ["Copy --color-primary", `--color-primary: ${tokens.colors.primary};`],
-      ["Copy --color-success", `--color-success: ${tokens.colors.success};`],
-      ["Copy --radius-md", `--radius-md: ${tokens.radii.md};`],
-      ["Copy --radius-cta", `--radius-cta: ${tokens.radii.cta};`],
-      ["Copy --elevation-2", "--elevation-2: 0px 12px 24px -6px rgba(29, 51, 40, 0.08);"],
-      ["Copy --space-gap", `--space-gap: ${tokens.spacing.gap};`],
+      ["--color-primary", `--color-primary: ${tokens.colors.primary};`],
+      ["--color-success", `--color-success: ${tokens.colors.success};`],
+      ["--radius-md", `--radius-md: ${tokens.radii.md};`],
+      ["--radius-cta", `--radius-cta: ${tokens.radii.cta};`],
+      ["--elevation-2", "--elevation-2: 0px 12px 24px -6px rgba(29, 51, 40, 0.08);"],
+      ["--space-gap", `--space-gap: ${tokens.spacing.gap};`],
       [
-        "Copy text-body",
+        "text-body",
         "font-family: 'Inter', sans-serif; font-size: 14px; line-height: 22px; letter-spacing: -0.006em; font-weight: 400;",
       ],
     ];
     for (const [name, expected] of targets) {
-      await page.getByRole("button", { name, exact: true }).click();
+      await page.getByRole("button", { name: new RegExp(`^Copy .*${name}( |$)`) }).click();
       await expect.poll(() => readClipboard(page)).toBe(expected);
-      await expect(toast(page)).toHaveText(`Copied ${name.replace("Copy ", "")}.`);
+      await expect(toast(page)).toHaveText(`Copied ${name}.`);
     }
   });
 
   test("works from the keyboard", async ({ page }) => {
     await open(page);
-    const target = page.getByRole("button", { name: "Copy --radius-sm", exact: true });
+    const target = page.getByRole("button", { name: "Copy 8px --radius-sm", exact: true });
     await target.focus();
     await page.keyboard.press("Enter");
     await expect(toast(page)).toHaveText("Copied --radius-sm.");

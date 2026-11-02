@@ -39,7 +39,7 @@ export function StudioHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-canvas/90 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between gap-2 px-4 md:px-7 xl:px-5">
+      <div className="mx-auto flex h-16 max-w-[1680px] items-center justify-between gap-2 px-4 sm:px-7 lg:px-5">
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <Emblem />
           <div className="min-w-0">
@@ -49,11 +49,11 @@ export function StudioHeader() {
                 Lab
               </span>
             </div>
-            <p className="truncate text-label-sm text-ink-muted">An interactive design lab by Ikizen</p>
+            <p className="truncate text-label-sm text-ink-muted sm:max-md:hidden">An interactive design lab by Ikizen</p>
           </div>
         </div>
         <HeaderNav />
-        <div className="flex shrink-0 items-center justify-end gap-1 md:flex-1">
+        <div className="flex shrink-0 items-center justify-end gap-1 lg:flex-1">
           <button type="button" aria-label="Reset lab" onClick={reset} className={iconButton}>
             <RotateCcw aria-hidden size={18} />
           </button>
@@ -70,7 +70,7 @@ export function StudioHeader() {
       </div>
       <p
         role="status"
-        className="absolute top-full right-4 mt-1 rounded-full border border-line bg-elevated px-3 py-1 text-label-md text-ink shadow-float empty:border-0 empty:p-0 md:right-7 xl:right-5"
+        className="absolute top-full right-4 mt-1 rounded-full border border-line bg-elevated px-3 py-1 text-label-md text-ink shadow-float empty:border-0 empty:p-0 sm:right-7 lg:right-5"
       >
         {notice}
       </p>

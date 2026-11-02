@@ -29,7 +29,7 @@ export function BrandCards() {
 
   return (
     <section aria-labelledby="brands-heading" className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2 px-4 md:px-0">
+      <div className="flex items-center justify-between gap-2 px-4 sm:px-0">
         <h2 id="brands-heading" className="text-label-mono tracking-wider text-ink-muted uppercase">
           Active Archetype
         </h2>
@@ -39,7 +39,7 @@ export function BrandCards() {
       </div>
       <div
         ref={scrollerRef}
-        className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 md:grid md:grid-cols-3 md:overflow-visible md:px-0 md:pb-0 xl:grid-cols-1"
+        className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-px-4 px-4 pb-2 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-1"
       >
         {BRAND_IDS.map((id) => {
           const brand = BRANDS[id];
@@ -52,7 +52,7 @@ export function BrandCards() {
               type="button"
               aria-pressed={active}
               onClick={() => dispatch({ type: "selectBrand", brandId: id })}
-              className={`relative w-[280px] shrink-0 snap-start overflow-hidden rounded-enclosure border p-3.5 text-left transition-[background-color,border-color,box-shadow] duration-300 md:w-auto ${
+              className={`relative w-[280px] shrink-0 snap-start overflow-hidden rounded-enclosure border p-3.5 text-left transition-[background-color,border-color,box-shadow] duration-300 sm:w-auto ${
                 active ? "border-line-strong bg-elevated shadow-float" : "border-line bg-subtle/60 hover:bg-subtle"
               }`}
             >
@@ -73,14 +73,14 @@ export function BrandCards() {
                   <Icon size={18} />
                 </span>
               </span>
-              <span className="my-2 flex flex-wrap gap-1.5 xl:hidden">
+              <span className="my-2 flex flex-wrap gap-1.5 sm:hidden">
                 {CARD_TAGS[id].map((tag) => (
                   <span key={tag} className="rounded bg-subtle px-2 py-0.5 text-[10px] leading-4 text-ink-muted">
                     {tag}
                   </span>
                 ))}
               </span>
-              <span className="flex items-center justify-between gap-2 xl:mt-2">
+              <span className="flex items-center justify-between gap-2 sm:mt-2">
                 <span aria-hidden className="flex gap-1.5">
                   {SWATCH_ROLES.map((role) => (
                     <span

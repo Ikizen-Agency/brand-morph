@@ -56,10 +56,10 @@ export function GeometrySection({ onCopy }: Readonly<{ onCopy: CopyToken }>) {
                   key={name}
                   type="button"
                   data-testid={`radius-${name}`}
-                  aria-label={`Copy ${variable}`}
                   className={styles.radiusTile}
                   onClick={() => onCopy(radiusDeclaration(tokens, name), variable)}
                 >
+                  <span className="sr-only">Copy </span>
                   <span
                     data-testid="radius-sample"
                     className={styles.radiusSample}
@@ -82,10 +82,10 @@ export function GeometrySection({ onCopy }: Readonly<{ onCopy: CopyToken }>) {
                 key={name}
                 type="button"
                 data-testid={`elevation-${name}`}
-                aria-label={`Copy ${variable}`}
                 className={styles.elevationTile}
                 onClick={() => onCopy(shadowDeclaration(tokens, name), variable)}
               >
+                <span className="sr-only">Copy {variable} </span>
                 <span className={styles.elevationHead}>
                   {title}
                   <Copy aria-hidden size={15} />
@@ -111,10 +111,10 @@ export function GeometrySection({ onCopy }: Readonly<{ onCopy: CopyToken }>) {
                 key={name}
                 type="button"
                 data-testid={`spacing-${name}`}
-                aria-label={`Copy ${variable}`}
                 className={styles.spacingTile}
                 onClick={() => onCopy(spacingDeclaration(tokens, name), variable)}
               >
+                <span className="sr-only">Copy </span>
                 <span aria-hidden className={styles.spacingBar} style={{ width: `var(${scopeVar})` }} />
                 <span className={styles.spacingText}>
                   <span>{variable}</span>

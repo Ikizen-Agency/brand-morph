@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "./nav-items";
 
-/** Inline navigation for tablet and desktop. Phones use BottomTabs. */
+/** Inline navigation from tablet width up. Phones use BottomTabs. */
 export function HeaderNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+    <nav aria-label="Primary" className="hidden shrink-0 items-center gap-1 sm:flex">
       {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
         const active = pathname === href;
         return (
@@ -16,7 +16,7 @@ export function HeaderNav() {
             key={href}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`flex h-9 items-center gap-1.5 rounded-control px-3 text-label-lg transition-colors duration-150 ${
+            className={`flex h-9 items-center gap-1.5 rounded-control px-2 text-label-lg whitespace-nowrap md:px-3 transition-colors duration-150 ${
               active ? "bg-subtle font-semibold text-ink" : "text-ink-muted hover:bg-subtle hover:text-ink"
             }`}
           >
@@ -34,7 +34,7 @@ export function BottomTabs() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-canvas/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-xl sm:hidden"
     >
       <ul className="flex h-16">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {

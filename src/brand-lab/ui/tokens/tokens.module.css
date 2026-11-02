@@ -1,6 +1,7 @@
 /* Specimens: everything here reads the brand through --sb-* scope variables. */
 
 .scope {
+  container-type: inline-size;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -232,7 +233,7 @@
   color: var(--sb-color-muted);
 }
 
-@media (min-width: 768px) {
+@container (min-width: 560px) {
   .radii {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }

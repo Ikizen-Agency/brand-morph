@@ -59,6 +59,11 @@
   --text-label-mono--font-weight: 500;
 }
 
+/* Clears the sticky header and the bottom bars when focus or a skip link scrolls the page. */
+html {
+  scroll-padding-block: 5rem 6rem;
+}
+
 body {
   background-color: var(--color-canvas);
   color: var(--color-ink);
@@ -90,6 +95,7 @@ label {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+    transition-delay: 0s !important;
     transition-duration: 0.01ms !important;
   }
 }

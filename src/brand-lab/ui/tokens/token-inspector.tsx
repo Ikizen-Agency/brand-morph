@@ -22,7 +22,7 @@ export function TokenInspector() {
       data-testid="tokens-page"
       data-ready={ready}
       data-brand={state.brandId}
-      className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pt-4 pb-6 md:px-7 xl:grid xl:max-w-none xl:grid-cols-[minmax(0,1fr)_minmax(0,440px)] xl:items-start xl:p-7"
+      className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 pt-4 pb-6 sm:grid sm:grid-cols-2 sm:items-start sm:px-7 lg:max-w-[1680px] lg:grid-cols-[minmax(0,1fr)_minmax(0,400px)] lg:p-7 xl:grid-cols-[minmax(0,1fr)_minmax(0,440px)]"
     >
       <div className="flex min-w-0 flex-col gap-6">
         <section className="flex flex-col gap-3">
@@ -64,7 +64,7 @@ export function TokenInspector() {
         <GeometrySection onCopy={copy} />
       </div>
 
-      <div className="flex min-w-0 flex-col gap-6 xl:sticky xl:top-[calc(4rem+1.75rem)]">
+      <div className="flex min-w-0 flex-col gap-6 sm:sticky sm:top-[calc(4rem+1.75rem)]">
         <ExportPanel onCopy={copy} announce={announce} />
         <EngineCard />
       </div>
@@ -72,7 +72,7 @@ export function TokenInspector() {
       <div
         role="status"
         data-testid="tokens-toast"
-        className="pointer-events-none fixed bottom-24 left-1/2 z-40 w-max max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-control bg-ink px-3.5 py-2.5 text-label-lg text-canvas shadow-float empty:sr-only md:bottom-6"
+        className="pointer-events-none fixed bottom-24 left-1/2 z-40 w-max max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-control bg-ink px-3.5 py-2.5 text-label-lg text-canvas shadow-float empty:sr-only sm:bottom-6"
       >
         {notice ? <span key={notice.id}>{notice.text}</span> : null}
       </div>

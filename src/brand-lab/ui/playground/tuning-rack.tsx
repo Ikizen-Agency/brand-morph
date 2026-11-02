@@ -51,7 +51,7 @@ export function TuningRack() {
           Auto-match
         </button>
       </div>
-      <div className="grid grid-cols-2 gap-x-2 gap-y-3 md:grid-cols-4 xl:grid-cols-1">
+      <div className="grid grid-cols-2 gap-x-2 gap-y-3 md:grid-cols-4 lg:grid-cols-1">
         <Segmented
           legend="Simulation Stage"
           name="device"

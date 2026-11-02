@@ -1,3 +1,4 @@
+import { BRANDS } from "../domain/brands";
 import { effectiveTokens, type LabState } from "./lab-state";
 
 export interface LedgerEntry {
@@ -21,6 +22,11 @@ export function ledgerEntries(state: LabState): LedgerEntry[] {
     { name: "--pad", value: tokens.spacing.padding },
     { name: "--btn", value: state.tuning.cta },
   ];
+}
+
+/** One line for places too small for the ledger, such as the collapsed tablet drawer. */
+export function describeLab({ brandId, tuning }: LabState): string {
+  return `${BRANDS[brandId].name}, ${tuning.density}, radius ${tuning.radius}, ${tuning.cta} CTA`;
 }
 
 export function ledgerText(state: LabState): string {

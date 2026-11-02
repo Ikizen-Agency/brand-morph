@@ -60,9 +60,9 @@ export function Gallery() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-5xl xl:grid xl:max-w-none xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-      <div className="min-w-0 pb-6 xl:p-7 xl:pr-5">
-        <section className="flex flex-col gap-2 px-4 pt-4 pb-4 md:px-7 xl:px-0 xl:pt-0">
+    <div className="mx-auto w-full max-w-5xl lg:grid lg:max-w-[1680px] lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="min-w-0 pb-6 lg:p-7 lg:pr-5">
+        <section className="flex flex-col gap-2 px-4 pt-4 pb-4 sm:px-7 lg:px-0 lg:pt-0">
           <div className="flex items-center justify-between gap-2">
             <p className="flex items-center gap-1.5 text-label-mono tracking-wider text-ink-muted uppercase">
               <span aria-hidden className="size-2 rounded-full bg-ink motion-safe:animate-pulse" />
@@ -82,7 +82,7 @@ export function Gallery() {
           <div
             role="group"
             aria-label="Filter specimens by category"
-            className="-mx-4 flex gap-1 overflow-x-auto px-4 py-1 md:mx-0 md:flex-wrap md:overflow-visible md:px-0"
+            className="-mx-4 flex gap-1 overflow-x-auto px-4 py-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
           >
             {GALLERY_FILTERS.map(({ id, label }) => (
               <button
