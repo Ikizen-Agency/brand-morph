@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { readFile } from "node:fs/promises";
+import { contrastSummary } from "../src/brand-lab/application/token-inspector";
 import { BRAND_IDS, BRANDS, COLOR_ROLES, type BrandId, type ColorRole } from "../src/brand-lab/domain/brands";
 import { EXPORT_FORMATS, exportAll, exportTokens, kebab } from "../src/brand-lab/domain/exporters";
 import { fontFamilies, formatTypeSpec, resolveTokens, TYPE_STYLE_IDS } from "../src/brand-lab/domain/tokens";
@@ -63,16 +64,23 @@ test.describe("brand binding", () => {
         id === "solace" ? "Plus Jakarta" : family.split(" ")[0],
       );
 
-      for (const name of ["sm", "md", "lg", "surface", "cta"] as const) {
+      for (const name of ["sm", "md", "lg", "full", "surface", "cta"] as const) {
         const sample = page.getByTestId(`radius-${name}`).getByTestId("radius-sample");
         await expect(sample).toHaveText(tokens.radii[name]);
         expect(await computed(sample, "border-top-left-radius")).toBe(tokens.radii[name]);
       }
 
-      const { x, y, blur, spread, alpha } = tokens.shadows.elevation1;
-      const shadow = page.getByTestId("elevation-elevation1").getByTestId("elevation-sample");
-      expect(await computed(shadow, "box-shadow")).toContain(`${x}px ${y}px ${blur}px ${spread}px`);
-      expect(await computed(shadow, "box-shadow")).toContain(`${alpha})`);
+      for (const name of ["elevation1", "elevation2", "elevationCta"] as const) {
+        const { x, y, blur, spread, alpha } = tokens.shadows[name];
+        const shadow = page.getByTestId(`elevation-${name}`).getByTestId("elevation-sample");
+        const css = await computed(shadow, "box-shadow");
+        if (x === 0 && y === 0 && blur === 0 && spread === 0) {
+          expect(css).toBe("none");
+          continue;
+        }
+        expect(css).toContain(`${x}px ${y}px ${blur}px ${spread}px`);
+        if (alpha < 1) expect(css).toContain(`${alpha})`);
+      }
 
       const scope = page.getByTestId("geometry-scope");
       expect(await scope.getAttribute("data-brand")).toBe(id);
@@ -148,12 +156,15 @@ test.describe("computed labels", () => {
   test("the engine card follows state", async ({ page }) => {
     await open(page);
     await expect(page.getByTestId("engine-overrides")).toHaveText("0");
-    await hexField(page, "primary").fill("#0A0F0D");
+    const contrast = page.getByTestId("engine-contrast");
+    const { colors } = tokensFor("solace");
+    const before = contrastSummary(colors);
+    await expect(contrast).toHaveText(`${before.passing} of ${before.total}`);
+    await hexField(page, "onPrimary").fill(colors.primary);
     await expect(page.getByTestId("engine-overrides")).toHaveText("1");
-    const before = await page.getByTestId("engine-contrast").innerText();
-    await hexField(page, "onPrimary").fill("#0A0F0E");
-    await expect(page.getByTestId("engine-overrides")).toHaveText("2");
-    expect(before).toMatch(/^\d+ of \d+$/);
+    const after = contrastSummary({ ...colors, onPrimary: colors.primary });
+    expect(after.passing).toBeLessThan(before.passing);
+    await expect(contrast).toHaveText(`${after.passing} of ${after.total}`);
     await chooseBrand(page, "orbit");
     await expect(page.getByTestId("engine-overrides")).toHaveText("0");
   });
@@ -316,8 +327,8 @@ test.describe("copy", () => {
     ];
     for (const [name, expected] of targets) {
       await page.getByRole("button", { name, exact: true }).click();
-      await expect(toast(page)).toContainText("Copied");
-      expect(await readClipboard(page)).toBe(expected);
+      await expect.poll(() => readClipboard(page)).toBe(expected);
+      await expect(toast(page)).toHaveText(`Copied ${name.replace("Copy ", "")}.`);
     }
   });
 
@@ -437,7 +448,7 @@ test.describe("export panel", () => {
       expect(await page.evaluate(() => (window as unknown as { blobType: string }).blobType)).toBe(
         format.mimeType,
       );
-      await expect(toast(page)).toHaveText(`Download started: ${fileName}.`);
+      await expect(toast(page)).toHaveText(`Download requested: ${fileName}.`);
     });
   }
 

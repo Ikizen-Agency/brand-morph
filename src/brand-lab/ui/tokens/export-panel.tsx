@@ -30,7 +30,7 @@ export function ExportPanel({
 
   const download = () => {
     downloadFile(fileName, format.mimeType, output);
-    announce(`Download started: ${fileName}.`);
+    announce(`Download requested: ${fileName}.`);
   };
 
   return (

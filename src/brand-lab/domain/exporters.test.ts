@@ -89,6 +89,26 @@ describe("toTypeScript", () => {
 describe("toDtcgJson", () => {
   const tree = (id: (typeof BRAND_IDS)[number] = "solace") => JSON.parse(toDtcgJson(tokensFor(id)));
 
+  it("writes a unitless zero as a px dimension", () => {
+    const tokens = tokensFor("solace");
+    const output = JSON.parse(toDtcgJson({ ...tokens, radii: { ...tokens.radii, sm: "0" } }));
+    expect(output.radius.sm.$value).toEqual({ value: 0, unit: "px" });
+  });
+
+  it("leaves out a dimension the format cannot express, so rendering never throws", () => {
+    const tokens = tokensFor("solace");
+    const edited = {
+      ...tokens,
+      radii: { ...tokens.radii, sm: "1em" },
+      spacing: { ...tokens.spacing, gap: "auto" },
+    };
+    for (const format of EXPORT_FORMATS) expect(() => format.render(edited)).not.toThrow();
+    const output = JSON.parse(toDtcgJson(edited));
+    expect(output.radius.sm).toBeUndefined();
+    expect(output.spacing.gap).toBeUndefined();
+    expect(output.radius.md.$value).toEqual({ value: 16, unit: "px" });
+  });
+
   it("emits structured sRGB colors with a six digit hex fallback", () => {
     expect(tree().color.primary).toEqual({
       $type: "color",

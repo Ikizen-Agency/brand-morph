@@ -93,10 +93,11 @@ function dtcgColor(hex: string, alpha = 1) {
   return { colorSpace: "srgb", components: hexToRgb(hex).map(dtcgComponent), alpha, hex };
 }
 
+/** The format allows only px and rem. Returns null for anything else, including `auto` or `1em`. */
 function dtcgDimension(css: string) {
+  if (css === "0") return { value: 0, unit: "px" };
   const match = /^(-?\d*\.?\d+)(px|rem)$/.exec(css);
-  if (!match) throw new Error(`DTCG dimensions must use px or rem, received: ${css}`);
-  return { value: Number(match[1]), unit: match[2] };
+  return match ? { value: Number(match[1]), unit: match[2] } : null;
 }
 
 const px = (value: number) => ({ value, unit: "px" });
@@ -120,9 +121,13 @@ const dtcgTypography = (fonts: TokenSet["fonts"]) => (style: TypeStyle) => ({
   lineHeight: Number((style.lineHeight / style.fontSize).toFixed(4)),
 });
 
+/** Exports run during render, so a value the format cannot express is left out, never thrown. */
 function dtcgGroup<T>(group: object, type: string, toValue: (value: T) => unknown) {
   return Object.fromEntries(
-    Object.entries(group).map(([name, value]) => [name, { $type: type, $value: toValue(value as T) }]),
+    Object.entries(group).flatMap(([name, value]) => {
+      const $value = toValue(value as T);
+      return $value === null ? [] : [[name, { $type: type, $value }]];
+    }),
   );
 }
 
