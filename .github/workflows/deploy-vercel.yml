@@ -3,6 +3,7 @@ name: CI/CD Deploy
 on:
   push:
     branches: [main, staging]
+  workflow_dispatch:
 
 # One deployment per branch at a time; a newer push waits instead of overlapping.
 concurrency:
