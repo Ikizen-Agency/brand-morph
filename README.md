@@ -2,7 +2,7 @@
 
 Change one set of design tokens and watch one product become three different brands, live in your browser. Brand Morph is an interactive design lab by Ikizen.
 
-**Live demo:** `TBD: added when the production deployment ships`
+**Live demo:** [brand-morph-chi.vercel.app](https://brand-morph-chi.vercel.app)
 
 ## What you can do
 
